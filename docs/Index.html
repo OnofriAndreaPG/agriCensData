@@ -176,7 +176,7 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Cars</a>
+      <a class="navbar-brand" href="index.html">agriCensData</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -222,6 +222,16 @@ Department of Botany, Warsaw University of Life Sciences – SGGW, Nowoursynowsk
 <p>The problem is not that censored data do not exist in agricultural research; the problem is that, dealing with these data, agricultural researchers do not select the appropriate methods of data analysis, but they keep on using the conventional tools, such as ANOVA and regression, which are either wrong or inefficient.</p>
 <p>In the paper we gave three examples and try to show why it is important to use methods that fully respect the manner in which the data were collected. We also gave some software tips to make censored data methods slightly more popular among biologists/agricultural scientists. However, we are very thankful to the reviewers, who suggested that we probably needed some extra space, to take the readers hand-by-hand and guide them through the process of data analysis with censored data.</p>
 <p>This webpage aims at providing fully commented R code and the datasets to reproduce all the analysis and results in our main paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively. Please, use the top menu to get access to the different sections of this site.</p>
+</div>
+<div id="the-package" class="section level1">
+<h1>The package</h1>
+<p>This web site is associated to an R package, that contains all the dataset. Please, install this package from gitHub. If you have not done this before, you also need to install the <em>devtools</em> package. The code is as follows:</p>
+<pre class="r"><code># install.packages(&quot;devtools&quot;)
+library(devtools)
+install_github(&quot;OnofriAndreaPG/agriCensData&quot;)</code></pre>
+<pre><code>## Downloading GitHub repo OnofriAndreaPG/agriCensData@master
+## from URL https://api.github.com/repos/OnofriAndreaPG/agriCensData/zipball/master</code></pre>
+<pre><code>## Installation failed: Does not appear to be an R package (no DESCRIPTION)</code></pre>
 </div>
 
 

@@ -28,3 +28,16 @@ In the paper we gave three examples and try to show why it is important to use m
 
 This webpage aims at providing fully commented R code and the datasets to reproduce all the analysis and results in our main paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively. Please, use the top menu to get access to the different sections of this site.
 
+#The package
+
+This web site is associated to an R package, that contains all the dataset. Please, install this package from gitHub. If you have not done this before, you also need to install the *devtools* package. The code is as follows:
+
+```{r}
+# install.packages("devtools")
+library(devtools)
+install_github("OnofriAndreaPG/agriCensData")
+```
+
+
+
+

@@ -1,7 +1,5 @@
 ---
 title: 'Analyzing interval-censored data in agricultural research: a tutorial'
-author: "A. Onofri, H-P. Piepho, M. Kozak"
-date: "20/10/2018"
 ---
 
 

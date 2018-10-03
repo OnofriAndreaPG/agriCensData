@@ -1,0 +1,10 @@
+Package: agriCensData
+Version: 0.1
+Date: 2018-3-10
+Title: supporting material about censoring
+Author: Andrea Onofri <onofri@unipg.it>
+Maintainer: Andrea Onofri <onofri@unipg.it>
+Depends: R (>= 2.10.0)
+Description: Miscellaneous methods
+License: GPL (version 2 or later)
+
