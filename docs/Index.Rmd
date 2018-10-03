@@ -36,6 +36,12 @@ This web site is associated to an R package, that contains all the dataset. Plea
 # install.packages("devtools")
 library(devtools)
 install_github("OnofriAndreaPG/agriCensData")
+BBsurvey <- read.csv("BBsurvey.csv", header=T)
+save(BBsurvey, file="BBsurvey.rda")
+germination <- read.csv("germination.csv", header=T)
+save(germination, file="germination.rda")
+starchGrain <- read.csv("starchGrain.csv", header=T)
+save(starchGrain, file="starchGrain.rda")
 ```
 
 
