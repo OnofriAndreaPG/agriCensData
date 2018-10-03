@@ -4,9 +4,8 @@ navbar:
   title: "Cars"
   left:
   - text: "Home"
-   href: index.html
+    href: index.html
   - text: "Speed and Distance"
-   href: speed-and-distance.html
+    href: Tutorial.html
 output:
   html_document:
-  theme: cosmo
