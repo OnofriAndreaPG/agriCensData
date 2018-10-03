@@ -1,6 +1,7 @@
-name: "cars"
+name: "agriCensData"
+output_dir: "."
 navbar:
-  title: "Cars"
+  title: "agriCensData"
   left:
   - text: "Home"
     href: index.html
@@ -8,3 +9,5 @@ navbar:
     href: Tutorial.html
 output:
   html_document:
+    theme: cosmo
+    

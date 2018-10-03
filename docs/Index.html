@@ -11,17 +11,14 @@
 
 
 
-<title></title>
+<title>Analyzing interval-censored data in agricultural research: a tutorial</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
-<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
-<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -169,107 +166,6 @@ $(document).ready(function () {
 
 
 
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = false;
-    options.smoothScroll = false;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
-
-<style type="text/css">
-
-#TOC {
-  margin: 25px 0px 20px 0px;
-}
-@media (max-width: 768px) {
-#TOC {
-  position: relative;
-  width: 100%;
-}
-}
-
-
-.toc-content {
-  padding-left: 30px;
-  padding-right: 40px;
-}
-
-div.main-container {
-  max-width: 1200px;
-}
-
-div.tocify {
-  width: 20%;
-  max-width: 260px;
-  max-height: 85%;
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  div.tocify {
-    width: 25%;
-  }
-}
-
-@media (max-width: 767px) {
-  div.tocify {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-.tocify ul, .tocify li {
-  line-height: 20px;
-}
-
-.tocify-subheader .tocify-item {
-  font-size: 0.90em;
-  padding-left: 25px;
-  text-indent: 0;
-}
-
-.tocify .list-group-item {
-  border-radius: 0px;
-}
-
-.tocify-subheader {
-  display: inline;
-}
-.tocify-subheader .tocify-item {
-  font-size: 0.95em;
-}
-
-</style>
-
-<!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row-fluid">
-<div class="col-xs-12 col-sm-4 col-md-3">
-<div id="TOC" class="tocify">
-</div>
-</div>
-
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
-
-
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -302,21 +198,34 @@ div.tocify {
 
 
 
-
+<h1 class="title toc-ignore">Analyzing interval-censored data in agricultural research: a tutorial</h1>
+<h4 class="author"><em>Andrea Onofri</em></h4>
+<address class="author_afil">
+Department of Agriculture, Food and Environmental Sciences, University of Perugia, Borgo XX Giugno 74, 06121 Perugia, Italy, <a href="mailto:andrea.onofri@unipg.it">andrea.onofri@unipg.it</a><br><h4 class="author"><em>Hans-Peter Piepho</em></h4>
+<address class="author_afil">
+Biostatistics Unit, Institute of Crop Science, University of Hohenheim, Fruwirthstr. 23, 70593 Stuttgart, Germany, <a href="mailto:hans-peter.piepho@uni-hohenheim.de">hans-peter.piepho@uni-hohenheim.de</a><br><h4 class="author"><em>Marcin Kozak</em></h4>
+<address class="author_afil">
+Department of Botany, Warsaw University of Life Sciences – SGGW, Nowoursynowska 159, 02-776 Warsaw, Poland, <a href="mailto:nyggus@gmail.com">nyggus@gmail.com</a><br>
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>prova 2</p>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<hr />
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>We have recently written a paper titled “Analyzing interval-censored data in agricultural research: a review with examples and code snippets” (<em>Literature reference, when available</em>). In that paper we noted that ‘survival analysis’ has mostly been overlooked in agricultural research. This is not because censored data are not found in agriculture. Indeed, a survey of literature in agronomy and related disciplines shows several examples where individual traits cannot be measured with high precision. Their values need to be represented by uncertainty intervals into which the real values fall. Therefore, these measures are censored. Some examples? In the paper we mentioned several of them: e.g.</p>
+<ol style="list-style-type: decimal">
+<li>time-to-event data (flowering times, germination times)</li>
+<li>measurements taken with instruments with low resolution or an upper/lower limit of detection</li>
+<li>counts of organisms which are recorded as higher than a certain threshold value</li>
+<li>visual measurements on a conventional rating scale (e.g. when scoring pesticide efficacy/phytotoxicity, leaf damage, plant growth, disease severity…).</li>
+</ol>
+<p>The problem is not that censored data do not exist in agricultural research; the problem is that, dealing with these data, agricultural researchers do not select the appropriate methods of data analysis, but they keep on using the conventional tools, such as ANOVA and regression, which are either wrong or inefficient.</p>
+<p>In the paper we gave three examples and try to show why it is important to use methods that fully respect the manner in which the data were collected. We also gave some software tips to make censored data methods slightly more popular among biologists/agricultural scientists. However, we are very thankful to the reviewers, who suggested that we probably needed some extra space, to take the readers hand-by-hand and guide them through the process of data analysis with censored data.</p>
+<p>This webpage aims at providing fully commented R code and the datasets to reproduce all the analysis and results in our main paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively. Please, use the top menu to get access to the different sections of this site.</p>
 </div>
 
 
 
-</div>
-</div>
 
 </div>
 
