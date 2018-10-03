@@ -1,5 +1,12 @@
 ---
-title: 'Analyzing interval-censored data in agricultural research: a tutorial'
+title: 'Example 1. Analyzing visually recorded cover-abundance data'
+author: "A. Onofri, H-P. Piepho and Marcin Kozak"
+output: 
+  html_document:
+    toc: yes
+    toc_float: 
+     collapsed: false
+     smooth_scroll: false
 ---
 
 
@@ -7,11 +14,11 @@ title: 'Analyzing interval-censored data in agricultural research: a tutorial'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Introduction
+# The dataset
 
-The aim of this document is to present the code used to analyse the three examples on the main paper. The interested readers will find an extended version of this document, in the form of an Rmarkdown tutorial, at .........  
-Example 1: Visually recorded cover-abundance data
-The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against Sorghum halepense in maize. Three weeks after the treatment, the cover-abundance of S. halepense was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as ‘L’ (lower limit) and ‘U’ (upper limit). The ‘midPoint’ represent the center of each class.
+The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as ‘L’ (lower limit) and ‘U’ (upper limit). The ‘midPoint’ represents the center of each class.
+
+First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://pages.github.com/) ) 
 
 R code
 The first step to accomplish the analyses is to read the dataset into R:

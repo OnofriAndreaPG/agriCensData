@@ -8,7 +8,11 @@ author:
   - name: Marcin Kozak
     affiliation: Department of Botany, Warsaw University of Life Sciences – SGGW, Nowoursynowska 159, 02-776 Warsaw, Poland, nyggus@gmail.com
 output: 
-  html_document 
+  html_document:
+    toc: yes
+    toc_float: 
+     collapsed: false
+     smooth_scroll: false
 ---
 
 ---
@@ -30,18 +34,12 @@ This webpage aims at providing fully commented R code and the datasets to reprod
 
 #The package
 
-This web site is associated to an R package, that contains all the dataset. Please, install this package from gitHub. If you have not done this before, you also need to install the *devtools* package. The code is as follows:
+This web-site is associated to an R package, that contains all the datasets. Please, install this package from gitHub. If you have not done this before, you also need to install the *devtools* package. The code is as follows:
 
-```{r}
+```{r results='hide', message=F}
 # install.packages("devtools")
 library(devtools)
 install_github("OnofriAndreaPG/agriCensData")
-BBsurvey <- read.csv("BBsurvey.csv", header=T)
-save(BBsurvey, file="BBsurvey.rda")
-germination <- read.csv("germination.csv", header=T)
-save(germination, file="germination.rda")
-starchGrain <- read.csv("starchGrain.csv", header=T)
-save(starchGrain, file="starchGrain.rda")
 ```
 
 

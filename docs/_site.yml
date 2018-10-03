@@ -5,8 +5,14 @@ navbar:
   left:
   - text: "Home"
     href: index.html
-  - text: "Speed and Distance"
-    href: Tutorial.html
+  - text: "Example 1"
+    href: Example1.html
+  - text: "Example 2"
+    href: Example2.html
+  - text: "Example 3"
+    href: Example3.html
+  - text: "Random effects"
+    href: RandomEffects.html
 output:
   html_document:
     theme: cosmo
