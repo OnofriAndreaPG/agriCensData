@@ -1,5 +1,14 @@
 ---
-title: 'Analyzing interval-censored data in agricultural research: Example 1'
+title: 'Example 1. Analyzing time-to-event data'
+author: "A. Onofri, H-P. Piepho and Marcin Kozak"
+bibliography: GroupedData.bib
+csl: weed-research.csl
+output: 
+  html_document:
+    toc: yes
+    toc_float: 
+     collapsed: false
+     smooth_scroll: false
 ---
 
 
@@ -11,164 +20,80 @@ data(germination)
 data(starchGrain)
 ```
 
+---
+   
+  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # The dataset
 
-The aim of this document is to present the code used to analyse the three examples on the main paper. The interested readers will find an extended version of this document, in the form of an Rmarkdown tutorial, at .........  
-Example 1: Visually recorded cover-abundance data
-The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against Sorghum halepense in maize. Three weeks after the treatment, the cover-abundance of S. halepense was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as ‘L’ (lower limit) and ‘U’ (upper limit). The ‘midPoint’ represent the center of each class.
+This simple dataset was taken from an unpublished experiment with *Lobelia erinus* L.. The germination behavior of a seed lot was tested at two different temperatures (15 and 25°C), by using one Petri dish with 100 seeds per temperature. Germinated seeds were counted every second day for 39 days and were removed from the Petri dishes. The aim is to quantify the effect of temperature on germination velocity, by comparing the time to 50% germination (T50) at both temperatures.
 
-R code
-The first step to accomplish the analyses is to read the dataset into R:
+Also for this example, we need to read the data into R, after having installed all the necessary packages.
 
-BBsurvey <- data.frame(
-  Herbicide = factor(rep(LETTERS[1:9], each=4)), 
-  L = c(0.1, 0.1, 5, 5, 0.1, 0.1, 5, 5, 0, 0.1, 5, 5, 0, 0.1,
-       5, 5, 0, 0, 0.1, 0.1, 5, 5, 25, 25, 0.1, 0.1, 5, 5, 
-       0, 0.1, 5, 5, 75, 25, 50, 25),
-  U = c(5, 5, 25, 25, 5, 5, 25, 25, 0.1, 5, 25, 25, 0.1, 
-       5, 25, 25, 0.1, 0.1, 5, 5, 25, 25, 50, 50, 5, 5, 
-       25, 25, 0.1, 5, 25, 25, 100, 50, 75, 50),
-  midPoint = c(2.55, 2.55, 15, 15, 2.55, 2.55, 15, 15, 0.05, 2.5, 15,
-              15, 0.05, 2.55, 15, 15, 0.05, 0.05, 2.55, 2.55, 15, 15,
-              37.5, 37.5, 2.5, 2.55, 15, 15, 0.1, 2.55, 15, 15, 
-              87.5, 37.5, 62.5, 37.5) )
-
-head(BBsurvey)
-#   Herbicide   L  U midPoint
-# 1         A 0.1  5     2.55
-# 2         A 0.1  5     2.55
-# 3         A 5.0 25    15.00
-# 4         A 5.0 25    15.00
-# 5         B 0.1  5     2.55
-# 6         B 0.1  5     2.55
-
-Once the dataset has been read, a traditional ANOVA model can be fit, by using the mid point for each class as the dependent variable. Means and multiple comparison testing may be obtained by using the emmeans package (Lenth, 2018)
-
-library(emmeans)
-mod.aov <- lm(midPoint ~ Herbicide, data = BBsurvey)
-means <- emmeans(mod.aov, ~Herbicide) 
-cld(means, Letter = LETTERS, sort=F)
-
-#  Herbicide  emmean       SE df  lower.CL upper.CL .group
-#  A          8.7750 5.501751 27 -2.513661 20.06366  A    
-#  B          8.7750 5.501751 27 -2.513661 20.06366  A    
-#  C          8.1375 5.501751 27 -3.151161 19.42616  A    
-#  D          8.1500 5.501751 27 -3.138661 19.43866  A    
-#  E          1.3000 5.501751 27 -9.988661 12.58866  A    
-#  F         26.2500 5.501751 27 14.961339 37.53866  A    
-#  G          8.7625 5.501751 27 -2.526161 20.05116  A    
-#  H          8.1625 5.501751 27 -3.126161 19.45116  A    
-#  I         56.2500 5.501751 27 44.961339 67.53866   B   
-# 
-# Confidence level used: 0.95 
-# P value adjustment: tukey method for comparing a family of 9 estimates 
-# significance level used: alpha = 0.05 
-
-To fit a survival model, we use the limits of each class as the dependent variables, instead of ‘midPoint’. In order to fit this model, we need to load the survival package (Therneau, 2015).
-
+```{r message=F}
+library(drc)
 library(survival)
-mod.surv <- survreg(Surv(L, U, type="interval2") ~ Herbicide, 
-  dist="gaussian", data = BBsurvey)
-means.surv <- emmeans(mod.surv, ~Herbicide) 
-cld(means.surv, Letters = LETTERS, sort=F)
-
-#  Herbicide    emmean       SE df   lower.CL  upper.CL .group
-#  A          6.755275 3.684287 26 -0.8178844 14.328434  AB   
-#  B          6.755275 3.684287 26 -0.8178844 14.328434  AB   
-#  C          5.903803 3.631445 26 -1.5607388 13.368345  A    
-#  D          5.903803 3.631445 26 -1.5607388 13.368345  A    
-#  E          1.269626 3.253208 26 -5.4174388  7.956691  A    
-#  F         25.022493 4.008432 26 16.7830434 33.261942   B   
-#  G          6.755275 3.684287 26 -0.8178844 14.328434  AB   
-#  H          5.903803 3.631445 26 -1.5607388 13.368345  A    
-#  I         57.335193 3.772500 26 49.5807077 65.089678    C  
-# 
-# Results are given on the Surv (not the response) scale. 
-# Confidence level used: 0.95 
-# P value adjustment: tukey method for comparing a family of 9 estimates 
-# significance level used: alpha = 0.05 
-
-SAS Code
-Here, it would be nice to give the code to perform with SAS the very same analyses as before (read the data, make an ANOVA and fit a survival model). Or we simply skip this part
-Example 2: Time-to-event data
-This dataset refers to a germination assay at two temperature levels (15 and 25°C). Germinated seeds were counted and removed on 20 dates after the beginning of the assay.
-
-R code
-Also for this example, the first step consists of reading the dataset into R:
-
-germination <- data.frame(
-obsT = c(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 
-  33, 35, 37, 39, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 
-  27, 29, 31, 33, 35, 37, 39),
-cumProp = c(0.02, 0.14, 0.25, 0.38, 0.52, 0.56, 0.62, 0.66, 0.71, 0.76, 
-  0.78, 0.79, 0.81, 0.82, 0.85, 0.87, 0.89, 0.91, 0.91, 0.92, 0.1, 
-  0.36, 0.49, 0.58, 0.68, 0.71, 0.77, 0.81, 0.82, 0.84, 0.86, 0.89, 
-  0.89, 0.9, 0.92, 0.94, 0.94, 0.94, 0.95, 0.96),
-temp = factor( rep(c(15, 25), each=20) ) )
-
+library(emmeans)
+library(agriCensData)
+Germination <- germination
+save(Germination, file="Germination.rda")
+data(germination)
 head(germination)
-#   obsT cumProp temp
-# 1    1    0.02   15
-# 2    3    0.14   15
-# 3    5    0.25   15
-# 4    7    0.38   15
-# 5    9    0.52   15
-# 6   11    0.56   15
+```
+
+The dataset shows the data, the way they were collected, i.e. in the formo of counts ('counts') of germinated seeds at each assessment time ('obsT') and temperature )'temp'). It is important to note that it is not true that e,g, 12 seeds germinated 3 days After the Beginning of the Assay (ABA), they indeed germinated in an unknowm moment between 1 and 3 ABA.
+
+---
+
+#A traditional nonlinear regression fit
 
 The traditional method of data analysis is based on:
-(1) transforming the observed counts into cumulative proportions of germinated seeds, and
-(2) fitting a Gaussian cumulative probability density function, using nonlinear least squares regression.
 
+1. transforming the observed counts into cumulative proportions of germinated seeds
+2. fitting a Gaussian cumulative probability density function, using nonlinear least squares regression.
+
+We accomplished this part by using the 'drm()' function in the 'drc' package [@ritz2015_DoseResponseAnalysisUsing]. We decided to fit a log-normal ('LN.2()) probability density function, as the distribution of germination times within the population is expected to be log-normal.
+
+```{r}
 cumProp <- as.numeric(unlist(with(germination, 
-                                  tapply(counts, temp, cumsum) ))/100)
+                  tapply(counts, temp, cumsum) ))/100)
 
 mod <- drm(cumProp ~ obsT, fct=LN.2(), curveid=temp,
            pmodels=list(~1, ~temp-1), data = germination)
 summary(mod)
-# Model fitted: Log-normal with lower limit at 0 and upper limit at 1 (2 parms)
-# 
-# Parameter estimates:
-# 
-#               Estimate Std. Error t-value   p-value    
-# b:(Intercept) 0.871778   0.017726  49.182 < 2.2e-16 ***
-# e:temp15      9.106622   0.178919  50.898 < 2.2e-16 ***
-# e:temp25      5.429718   0.136514  39.774 < 2.2e-16 ***
-# ---
-# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# Residual standard error:
-# 
-#  0.02043963 (37 degrees of freedom)
+```
 
-For this example, a survival regression model is more appropriate. The code does the following:
-(1) The dataset is reorganised, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay.
-(2) Each record is characterised by three variables: the temperature at which it was tested and the two limits of the interval within which it germinated (‘timeBef’ and ‘timeAf’). Seeds which already germinated at the first monitoring time have ‘timeBef’ equal to NA (not available). Seeds which did not germinate at the final monitoring time have ‘timeAf’ equal to NA.
+As we note in our paper, this traditional method of data analysis is suboptimal for several reasons:
+
+1. modelling cumulative proportions instead of observed counts does not match the real process of data collection
+2. nonlinear regression assumes that a certain proportion of germinated seeds is reached at the exact moment of observation, but this does not have to be true
+3. nonlinear regression assumes model errors (deviations of observed proportions from the fitted curve) to be normally distributed, homoscedastic, and independent—which assumption often appears to be violated in germination assays
+
+#A time-to-event model
+
+For this example, a time-to-event model is more appropriate than nonlinear regression. Time-to-event model is just another name for a survival model. This name is appropriate when we are studying the time to the occurence of an event, which is not the death.
+
+In order to fit a time-to-event model in R we could use the 'survreg()' function in the 'survival' package, as we did for the first example. In this case, the observational unit is the seed and, therefore, we need to
+reorganised the dataset, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay. Each record needs to be characterised by three variables: the temperature at which the seed was tested and the two limits of the interval within which it germinated (‘timeBef’ and ‘timeAf’). Seeds which already germinated at the first monitoring time have ‘timeBef’ equal to NA (not available). Seeds which did not germinate at the final monitoring time have ‘timeAf’ equal to NA. The process of data reorganisation can be done by using the following code, producing the dataset 'germination2'.
+
+```{r}
+countsC <- with( germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) ) 
+
+germination2 <- data.frame(
+  temp = rep(factor(rep(c(15, 20), each=21)), countsC),
+  timeBef = rep(c(NA, germination$obsT[1:20], NA, germination$obsT[21:40]), countsC),
+  timeAf = rep(c(germination$obsT[1:20], NA, germination$obsT[21:40], NA), countsC) )
+rm(countsC)
+head(germination2, 10)
+```
+
 (3) A survival model is fitted using a lognormal distribution of germination times (dist = “lognormal”).
 
 
-counts <- c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) 
-
-germination2 <- data.frame(
-  temp = rep(factor(rep(c(15, 20), each=21)), counts),
-  timeAf = rep(c(germination$obsT[1:20], NA, germination$obsT[21:40], NA), counts),
-  timeBef = rep(c(NA, germination$obsT[1:20], NA, germination$obsT[21:40]), counts) )
-rm(counts)
-head(germination2, 10)
-
-#    temp timeAf timeBef
-# 1    15      1      NA
-# 2    15      1      NA
-# 3    15      3       1
-# 4    15      3       1
-# 5    15      3       1
-# 6    15      3       1
-# 7    15      3       1
-# 8    15      3       1
-# 9    15      3       1
-# 10   15      3       1
-
-library(survival)
-library(emmeans)
 
 mod2 <- survreg(Surv(timeBef, timeAf, type = "interval2") ~ temp,
   dist = "lognormal", data = germination2)
