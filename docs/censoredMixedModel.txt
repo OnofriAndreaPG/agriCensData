@@ -1,0 +1,53 @@
+
+data{
+for (i in 1:N) {
+zeros[i] <- 0
+}}
+
+model{
+for (i in 1:N) {
+  exp[i] <- mu[Group[i]] + gamma[Photo[i]]
+}
+
+for (i in 1:N1) {
+  #Likelihood for left-censored
+  S2[i] <- pnorm(high[i], exp[i], tau.e)
+  L[i] <- S2[i]     #(Equation 3)       
+  phi[i] <- -(log(L[i]))
+  zeros[i] ~ dpois(phi[i])    
+}
+
+for (i in (N1+1):N2) {
+  #Likelihood for interval-censored
+  S[i] <- pnorm(low[i], exp[i], tau.e)
+  S2[i] <- pnorm(high[i], exp[i], tau.e)
+  L[i] <- S2[i] - S[i]  #(Equation 4)      
+  phi[i] <- -(log(L[i]))
+  zeros[i] ~ dpois(phi[i])    
+}
+
+for (i in (N2+1):N) {
+  #Likelihood for right-censored
+  S[i] <- pnorm(low[i], exp[i], tau.e)
+  L[i] <- 1 - S[i]  #(Equation 5)      
+  phi[i] <- -(log(L[i]))
+  zeros[i] ~ dpois(phi[i])    
+}
+
+#Priors
+  sigma.e ~ dunif(0, 100)
+  sigma.P ~ dunif(0, 100)
+for(i in 1:2){
+  mu[i] ~ dnorm(0, 0.000001)
+}for(i in 1:24){
+  gamma[i] ~ dnorm(0, tau.P)
+}
+
+#Derived quantities
+  sigma2p <- sigma.P*sigma.P
+  sigma2e <- sigma.e*sigma.e
+  tau.P <- 1 / sigma2p
+  tau.e <- 1 / sigma2e
+  diff <- mu[1] - mu[2]
+}
+

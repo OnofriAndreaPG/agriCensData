@@ -1,5 +1,5 @@
 ---
-title: 'Example 1. Analyzing time-to-event data'
+title: 'Example 2. Analyzing time-to-event data'
 author: "A. Onofri, H-P. Piepho and Marcin Kozak"
 bibliography: GroupedData.bib
 csl: weed-research.csl
@@ -11,14 +11,6 @@ output:
      smooth_scroll: false
 ---
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(agriCensData)
-data(BBsurvey)
-data(germination)
-data(starchGrain)
-```
 
 ---
    
@@ -48,680 +40,85 @@ The dataset shows the data, the way they were collected, i.e. in the formo of co
 
 ---
 
-#A traditional nonlinear regression fit
+#A traditional nonlinear regression model
 
 The traditional method of data analysis is based on:
 
 1. transforming the observed counts into cumulative proportions of germinated seeds
 2. fitting a Gaussian cumulative probability density function, using nonlinear least squares regression.
 
-We accomplished this part by using the 'drm()' function in the 'drc' package [@ritz2015_DoseResponseAnalysisUsing]. We decided to fit a log-normal ('LN.2()) probability density function, as the distribution of germination times within the population is expected to be log-normal.
+We accomplished this part by using the 'drm()' function in the 'drc' package [@ritz2015_DoseResponseAnalysisUsing]. We decided to fit a log-normal ('LN.2()) probability density function, as the distribution of germination times within the population is expected to be log-normal. Please, note that the argument 'curveid' specifies that we need two curves (one per temperature) and the argument 'pmodels' specify that the first parameter (b: slope of the curve in the inflection point) is common for the two curves (~1), while the second (e: time to 50% germination; T50) depends on the temperature.
 
 ```{r}
-cumProp <- as.numeric(unlist(with(germination, 
+cumProp <- as.numeric(unlist(with(Germination, 
                   tapply(counts, temp, cumsum) ))/100)
 
 mod <- drm(cumProp ~ obsT, fct=LN.2(), curveid=temp,
-           pmodels=list(~1, ~temp-1), data = germination)
+           pmodels=list(~1, ~temp-1), data = Germination)
 summary(mod)
 ```
 
-As we note in our paper, this traditional method of data analysis is suboptimal for several reasons:
+As we noted in our paper, this traditional method of data analysis is suboptimal for several reasons:
 
 1. modelling cumulative proportions instead of observed counts does not match the real process of data collection
 2. nonlinear regression assumes that a certain proportion of germinated seeds is reached at the exact moment of observation, but this does not have to be true
-3. nonlinear regression assumes model errors (deviations of observed proportions from the fitted curve) to be normally distributed, homoscedastic, and independent—which assumption often appears to be violated in germination assays
+3. nonlinear regression assumes model errors (deviations of observed proportions from the fitted curve) to be normally distributed, homoscedastic, and independent, which assumptions often appear to be violated in germination assays
+
+---
 
 #A time-to-event model
 
 For this example, a time-to-event model is more appropriate than nonlinear regression. Time-to-event model is just another name for a survival model. This name is appropriate when we are studying the time to the occurence of an event, which is not the death.
 
-In order to fit a time-to-event model in R we could use the 'survreg()' function in the 'survival' package, as we did for the first example. In this case, the observational unit is the seed and, therefore, we need to
-reorganised the dataset, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay. Each record needs to be characterised by three variables: the temperature at which the seed was tested and the two limits of the interval within which it germinated (‘timeBef’ and ‘timeAf’). Seeds which already germinated at the first monitoring time have ‘timeBef’ equal to NA (not available). Seeds which did not germinate at the final monitoring time have ‘timeAf’ equal to NA. The process of data reorganisation can be done by using the following code, producing the dataset 'germination2'.
+In order to fit a time-to-event model in R, we could use the 'survreg()' function in the 'survival' package [@therneau_package_1999], as we did for the first example. The observational unit is the seed and, therefore, we need to reorganised the dataset, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay. Each record needs to be characterised by three variables: the temperature at which the seed was tested and the two limits of the interval within which it germinated (‘timeBef’ and ‘timeAf’). Seeds which already germinated at the first monitoring time have ‘timeBef’ equal to NA (not available). Seeds which did not germinate at the final monitoring time have ‘timeAf’ equal to NA. The process of data reorganisation can be done by using the following code, producing the dataset 'germination2'.
 
 ```{r}
-countsC <- with( germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) ) 
+countsC <- with( Germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) ) 
 
-germination2 <- data.frame(
+Germination2 <- data.frame(
   temp = rep(factor(rep(c(15, 20), each=21)), countsC),
-  timeBef = rep(c(NA, germination$obsT[1:20], NA, germination$obsT[21:40]), countsC),
-  timeAf = rep(c(germination$obsT[1:20], NA, germination$obsT[21:40], NA), countsC) )
+  timeBef = rep(c(NA, Germination$obsT[1:20], NA, Germination$obsT[21:40]), countsC),
+  timeAf = rep(c(Germination$obsT[1:20], NA, Germination$obsT[21:40], NA), countsC) )
 rm(countsC)
-head(germination2, 10)
+head(Germination2, 10)
 ```
 
-(3) A survival model is fitted using a lognormal distribution of germination times (dist = “lognormal”).
+Now we can fit a time-to-event model, by using a lognormal distribution of germination times (dist = “lognormal”). 
 
+```{r}
+modTE1 <- survreg(Surv(timeBef, timeAf, type = "interval2") ~ temp,
+  dist = "lognormal", data = Germination2)
+summary(modTE1)
+```
 
+This function returns three parameters: (i) the logarithm of the time to 50% germination (T50) at 15°C (Intercept), (ii) difference in log-T50 between 20 and 15°C, (iii) the standard deviation of the log-normal distribution of germination times, that is assumed to be unaffected by temperature (homoscedasticity). We may be interested on the T50 at both temperatures. We can retrive them by back-transforming the model parameters (e.g $exp(2.2415)$ and $exp(2.2415 - 0.6221)$), which is easily done by using the 'emmeans()' function in the 'emmeans' package [@lenth2016_LeastSquaresMeansPackage]   
 
-mod2 <- survreg(Surv(timeBef, timeAf, type = "interval2") ~ temp,
-  dist = "lognormal", data = germination2)
-summary(mod2)
 
-# Value Std. Error     z        p
-# (Intercept)  2.241     0.1173 19.11 2.11e-81
-# temp20      -0.622     0.1666 -3.73 1.89e-04
-# Log(scale)   0.145     0.0563  2.58 9.89e-03
-# 
-# Scale= 1.16 
-# 
-# Log Normal distribution
-# Loglik(model)= -525.3   Loglik(intercept only)= -532.1
-# Chisq= 13.57 on 1 degrees of freedom, p= 0.00023 
-# Number of Newton-Raphson Iterations: 3 
-# n= 200 
+```{r}
+emmeans(modTE1, ~temp, transform="response")
+```
 
-emmeans(mod2, ~temp, transform="response")
-#  temp response        SE  df lower.CL  upper.CL
-#  15   9.407324 1.1034551 197 7.231223 11.583425
-#  20   5.050110 0.5974451 197 3.871901  6.228319
-# 
-# Confidence level used: 0.95 
+The 'survreg()' function is a good tool to fit time-to-event models, although it has a notable limitation: it assumes that all individuals should experience the event of interest in one specific time, either before or after the end of the experiment. While this is acceptable with survival studies, in the case of germination assays there will almost always be a final fraction of dormant seeds, which will never germinate at the given environmental conditions. For this example, such fraction was negligible and, therefore, 'survreg()' gave a good fit.
 
-SAS code
-Here as well, it would be nice to give the code to perform with SAS the very same analyses as before (read the data, make a nonlinear least squares regression and fit a survival regression model). . Or we simply skip this part
+In general, with seed germination assays, it is necessary to use a time-to-event function which accounts for the final fraction of germinated seeds. In R, we can use the 'drm()' function in the 'drc' package. Please, note that the model call is very similar to the one we used for nonlinear regression, with the only differences of the dependent variable (the limits of the interval within which the germinations took place) and the 'type' argument, that has been explicitely set to 'event'. 
 
-Example 3: potato starch grain assessed in classes
+```{r}
+countsC <- with( Germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) )
 
-This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers, collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (<4, 4-8, 8-12, 12-16, >16 µm). For each producer, the diameters were taken from twelve photos taken with a microscope.
+Germination3 <- data.frame(
+  temp = factor(rep(c(15, 20), each=21)),
+  timeBef = c(0, Germination$obsT[1:20], 0, Germination$obsT[21:40]),
+  timeAf = c(Germination$obsT[1:20], Inf, Germination$obsT[21:40], Inf),
+  counts = countsC)
+head(Germination3, 10)
 
-R code
-The original dataset is in gouped form and consists of the counts of starch grains assigned to each of 5 diameter classes, as observed in 24 photos:
+modTE <- drm(counts ~ timeBef + timeAf, fct=LN.2(), 
+  type="event", curveid=temp, data=Germination3, pmodels=list(~1, ~temp-1))
+summary(modTE)
+```
 
-Class <- matrix(c(21, 23, 17, 24, 19, 13, 34, 23, 21, 26, 29, 40, 37, 31, 23,
-           32, 32, 22, 29, 28, 28, 33, 20, 34, 42, 45, 40, 42, 16, 7, 16,
-           13, 28, 27, 25, 19, 33, 40, 37, 36, 47, 18, 20, 13, 12, 13, 13, 
-           12, 40, 22, 33, 30, 15, 11, 8, 10, 26, 27, 21, 22, 30, 24, 31,
-           30, 28, 25, 27, 21, 16, 24, 13, 8, 29, 12, 18, 8, 8, 4, 5, 4, 8,
-           14, 16, 7, 27, 20, 13, 5, 20, 22, 14, 17, 13, 12, 20, 19, 14, 10,
-           8, 3, 3, 10, 9, 1, 8, 8, 7, 10, 19, 15, 19, 20, 20, 13, 18, 11,
-           21, 26, 22, 16), 24, 5)
-colnames(Class) <- paste("c", 1:5, sep = "")
-Group <- rep(c("P1", "P2"), each = 12)
-Photo <- rep(1:24)
-dataset <- data.frame(Group = Group, Photo = Photo, Class)
-rm(Class, Group, Photo) 
-head(dataset)
- #   Group Photo c1 c2 c3 c4 c5
- # 1    P1     1 21 42 40 29 14
- # 2    P1     2 23 45 22 12 10
- # 3    P1     3 17 40 33 18  8
- # 4    P1     4 24 42 30  8  3
- # 5    P1     5 19 16 15  8  3
- # 6    P1     6 13  7 11  4 10
+As we discuss in our paper, the difference between nonlinear regression and time-to-event regression mainly relates to standard errors.
 
-It is useful to reorganise the above dataset in ungrouped form, so that we have one line for each starch grain (2441 lines), containing all the information about each individual starch grain (i.e. the photo, the class and the limits of the classes (sizeLow and sizeUp). This is done by using the facilities provided in the reshape package (Wickham, 2007).
+---
 
-moltenData <- melt(dataset, id=c("Group","Photo" ))
-datasetR <- moltenData[rep(seq_len(nrow(moltenData)), moltenData$value),][,1:3]
-names(datasetR)[3] <- "Class"
-row.names(datasetR) <- 1:2441
-rm(moltenData)
-
-#Imputing the diameter interval for each starch grain
-datasetR$sizeLow = with(datasetR, ifelse(Class=="c1", NA,
-        ifelse(Class=="c2", 4,
-          ifelse(Class=="c3", 8, 
-            ifelse(Class=="c4", 12, 16)))) ) 
-datasetR$sizeUp = with(datasetR, ifelse(Class=="c1", 4,
-        ifelse(Class=="c2", 8,
-          ifelse(Class=="c3", 12, 
-            ifelse(Class=="c4", 16, NA)))) ) 
-
- #   Group Photo Class sizeLow sizeUp
- # 1    P1     1    c1      NA      4
- # 2    P1     1    c1      NA      4
- # 3    P1     1    c1      NA      4
- # 4    P1     1    c1      NA      4
- # 5    P1     1    c1      NA      4
- # 6    P1     1    c1      NA      4
-
-The traditional method of analysis for this example would be to fit an unordered multinomial logit model. The following code
-
-1.	loads the dataset,
-2.	loads the nnet package (Venables and Ripley, 2002. The library emmeans is also necessary, but it has already been loaded)
-3.	fits the multinomial model,
-4.	fits a ‘null’ model, where there is no difference between producers, and
-5.	compares the full and reduced models, by using a likelihood ratio test.
-
-library(nnet)
-mmod <- multinom(Class ~ Group, datasetR)
-lsmeans(mmod, ~Group:Class)
-
- #Group Class       prob          SE df   lower.CL  upper.CL
- #P1    c1    0.26387376 0.013294604  8 0.23321635 0.2945312
- #P2    c1    0.26005662 0.011974488  8 0.23244341 0.2876698
- #P1    c2    0.29117490 0.013704010  8 0.25957340 0.3227764
- #P2    c2    0.21907767 0.011290852  8 0.19304092 0.2451144
- #P1    c3    0.24112576 0.012903510  8 0.21137022 0.2708813
- #P2    c3    0.20640863 0.011048063  8 0.18093176 0.2318855
- #P1    c4    0.12102033 0.009838293  8 0.09833319 0.1437075
- #P2    c4    0.15052247 0.009761136  8 0.12801325 0.1730317
- #P1    c5    0.08280524 0.008313059  8 0.06363529 0.1019752
- #P2    c5    0.16393459 0.010105997  8 0.14063012 0.1872391
-Confidence level used: 0.95
-
-mmodNull <- multinom(Class ~ 1, datasetR)
-anova(mmod, mmodNull)
-Likelihood ratio tests of Multinomial Models
-
-#Response: Class
-#  Model Resid. df Resid. Dev   Test    Df LR stat.      Pr(Chi)
-#1     1      9760   7651.197                                   
-#2 Group      9756   7599.133 1 vs 2     4 52.06482 1.337066e-10
- 
-The analyses may be more efficiently performed by fitting a survival regression method.
-The following R code fits this model using a Gaussian CDF (dist=‘gaussian’). The survival package is necessary.
-
-surv.reg1 <- survreg(Surv(sizeLow, sizeUp, type="interval2") ~ Group - 1,
- dist="gaussian", data=datasetR)
-summary(surv.reg1)
-
-# Call:
-# survreg(formula = Surv(sizeLow, sizeUp, type = "interval2") ~ 
-#     Group - 1, data = datasetR, dist = "gaussian")
-#            Value Std. Error    z         p
-# GroupP1     7.34     0.2122 34.6 3.46e-262
-# GroupP2     8.67     0.1920 45.1  0.00e+00
-# Log(scale)  1.89     0.0206 91.7  0.00e+00
-# 
-# Scale= 6.63 
-# 
-# Gaussian distribution
-# Loglik(model)= -3824.4   Loglik(intercept only)= -3835.2
-# 	Chisq= 21.57 on 1 degrees of freedom, p= 3.4e-06 
-# Number of Newton-Raphson Iterations: 3 
-# n= 2441
-
-SAS code
-Just wondering whether it might be useful to have SAS code for the multinomial and survival models, by using PROC LOGISTIC and PROC LIFEREG (maybe I’m wrong with the names).
-
-
-SAS code here
-
-
-With SAS, we can also use PROC NLMIXED. The following SAS code
-
-1.	loads the data
-2.	defines a correct likelihood, and
-3.	fits the model using NLMIXED
-
-
-data datasetSAS;
-input  Photo Groups  n1  n2  n3  n4  n5;
-n=sum(of n1-n5);
-datalines;
-     1      1 21 42 40 29 14
-     2      1 23 45 22 12 10
-     3      1 17 40 33 18  8
-     4      1 24 42 30  8  3
-     5      1 19 16 15  8  3
-     6      1 13  7 11  4 10
-     7      1 34 16  8  5  9
-     8      1 23 13 10  4  1
-     9      1 21 28 26  8  8
-    10      1 26 27 27 14  8
-    11      1 29 25 21 16  7
-    12      1 40 19 22  7 10
-    13      2 37 33 30 27 19
-    14      2 31 40 24 20 15
-    15      2 23 37 31 13 19
-    16      2 32 36 30  5 20
-    17      2 32 47 28 20 20
-    18      2 22 18 25 22 13
-    19      2 29 20 27 14 18
-    20      2 28 13 21 17 11
-    21      2 28 12 16 13 21
-    22      2 33 13 24 12 26
-    23      2 20 13 13 20 22
-    24      2 34 12  8 19 16
-    ;
-
-
-proc nlmixed data=datasetSAS technique=nrridg;
-parms sigma=4 mu1=8 mu2=10;
-t1=4; t2=8; t3=12; t4=16;
-if groups=1 then mu=mu1; else mu=mu2;
-pi1=probnorm((t1-mu)/sigma);
-pi2=probnorm((t2-mu)/sigma) - probnorm((t1-mu)/sigma);
-pi3=probnorm((t3-mu)/sigma) - probnorm((t2-mu)/sigma);
-pi4=probnorm((t4-mu)/sigma) - probnorm((t3-mu)/sigma);
-pi5=1-probnorm((t4-mu)/sigma);
-logL=lgamma(n+1)-lgamma(n1+1)-lgamma(n2+1)-lgamma(n3+1)-lgamma(n4+1)-lgamma(n5+1) + n1*log(pi1)+n2*log(pi2)+n3*log(pi3)+n4*log(pi4)+n5*log(pi5);
-model n1 ~ general(logL);
-estimate 'diff' mu1-mu2;
-estimate ‘sigma2’ sigma*sigma;
-run; 
-
-                             The NLMIXED Procedure
-
-                 NOTE: GCONV convergence criterion satisfied.
-
-
-                                 Fit Statistics
-
-                    -2 Log Likelihood                  671.9
-                    AIC (smaller is better)            677.9
-                    AICC (smaller is better)           679.1
-                    BIC (smaller is better)            681.4
-
-                               Parameter Estimates
-
-               Standard                               95% Confidence
-Par.  Estimate    Error   DF   t Value  Pr > |t|         Limits      Gradient
-
-sigma 6.6256     0.1367   24    48.48    <.0001   6.3435    6.9076   4.6E-10
-mu1   7.3398     0.2122   24    34.59    <.0001   6.9019    7.7778   5.531E-9
-mu2   8.6666     0.1920   24    45.13    <.0001   8.2703    9.0629   8.598E-9
-
-
-
-                              Additional Estimates
-
-                    St.
-Label  Estimate   Error    DF   t Value Pr > |t|    Alpha    Lower    Upper
-
-diff   -1.3267    0.2853   24   -4.65    0.0001     0.05   -1.9156   -0.7379
-sigma2 43.8985    1.8109   24   24.24    <.0001     0.05   40.1609   47.6360
-
-
-Example 3: estimation of random effects
-SAS code
-The following SAS code:
-1. defines a correct conditional likelihood, and
-2. fits the random-effects model by Gaussian quadrature using NLMIXED
-
-options linesize=100;
-proc nlmixed data=datasetSAS technique=nrridg;
-parms sigma=4 mu1=8 mu2=10 sigma2p=1.6;
-t1=4; t2=8; t3=12; t4=16;
-if groups=1 then mu=mu1; else mu=mu2;
-random p ~ normal(0,sigma2p) subject=photo;
-mu=mu+p;
-pi1=probnorm((t1-mu)/sigma);
-pi2=probnorm((t2-mu)/sigma) - probnorm((t1-mu)/sigma);
-pi3=probnorm((t3-mu)/sigma) - probnorm((t2-mu)/sigma);
-pi4=probnorm((t4-mu)/sigma) - probnorm((t3-mu)/sigma);
-pi5=1-probnorm((t4-mu)/sigma);
-logL=lgamma(n+1)-lgamma(n1+1)-lgamma(n2+1)-lgamma(n3+1)-lgamma(n4+1)-lgamma(n5+1) + n1*log(pi1)+n2*log(pi2)+n3*log(pi3)+n4*log(pi4)+n5*log(pi5);
-model n1 ~ general(logL);
-estimate 'diff' mu1-mu2;
-estimate 'sigmap' sqrt(sigma2p);
-estimate 'sigma2' sigma*sigma;
-run;
-                                 The NLMIXED Procedure
-
-                       NOTE: GCONV convergence criterion satisfied.
-
-
-                                     Fit Statistics
-
-                        -2 Log Likelihood                  666.2
-                        AIC (smaller is better)            674.2
-                        AICC (smaller is better)           676.3
-                        BIC (smaller is better)            678.9
-
-                                   Parameter Estimates
-
-               Stand.                      95% Confidence
-Param.  Est.   Error  DF  t Value Pr>|t|      Limits         Gradient
-
-sigma   6.5931 0.1364 23  48.33   <.0001   6.3108  6.8753    3.18E-11
-mu1     7.2367 0.2918 23  24.80   <.0001   6.6330  7.8403    2.07E-10
-mu2     8.6992 0.2724 23  31.93   <.0001   8.1357  9.2627    2.79E-10
-sigma2p 0.4424 0.2862 23   1.55   0.1358  -0.1496  1.0345    2.53E-1
-
-                                   Additional Estimates
-
-                  Stand.
-Label   Estimate  Error    DF   t Value Pr>|t|  Alpha  Lower     Upper
-
-diff     -1.4625  0.3995   23   -3.66   0.0013  0.05  -2.2889   -0.6362
-sigmap    0.6652  0.2151   23    3.09   0.0051  0.05   0.2201    1.1102
-sigma2   43.4685  1.7990   23   24.16   <.0001  0.05  39.7470   47.1900
-
-
- 
-Example 3: the Bayesian perspective
-R code
-The first step is to specify an appropriate model (in JAGS code), which requires the following steps: 
-1. a value of zero is assigned to all observations (the “zeros trick”, as explained in the text);
-2. Equation (6) is used, in which the expected diameter is assigned to all N observations, by using the for() loop;
-3. the likelihood function is calculated for the observations in the first class (left-censored; Equation 3), assumed to be in the first N1 rows of the database;
-4. the likelihood function is calculated for the observations in the 2nd to 4th class (interval-censored; Equation 4), assumed to be in the rows from N1+1 to N2;
-5. the likelihood function is calculated for the observations in the 5th class (right-censored; Equation 5), assumed to be in the rows from N2+1 to N; and
-6. the prior distributions are specified for all the parameters.
-
-# Save BUGS description of the model to working directory
-modelSpec <- "
-data{
-for (i in 1:N) {
-zeros[i] <- 0
-}}
-
-model{
-for (i in 1:N) {
-  #Equation 6
-  exp[i] <- mu[Group[i]] + gamma[Photo[i]]
-}
-
-for (i in 1:N1) {
-  #Likelihood for left-censored
-  S2[i] <- pnorm(high[i], exp[i], tau.e)
-  L[i] <- S2[i]     #(Equation 3)       
-  phi[i] <- -(log(L[i]))
-  zeros[i] ~ dpois(phi[i])    
-}
-
-for (i in (N1+1):N2) {
-  #Likelihood for interval-censored
-  S[i] <- pnorm(low[i], exp[i], tau.e)
-  S2[i] <- pnorm(high[i], exp[i], tau.e)
-  L[i] <- S2[i] - S[i]  #(Equation 4)      
-  phi[i] <- -(log(L[i]))
-  zeros[i] ~ dpois(phi[i])    
-}
-
-for (i in (N2+1):N) {
-  #Likelihood for right-censored
-  S[i] <- pnorm(low[i], exp[i], tau.e)
-  L[i] <- 1 - S[i]  #(Equation 5)      
-  phi[i] <- -(log(L[i]))
-  zeros[i] ~ dpois(phi[i])    
-}
-
-#Priors
-  sigma.e ~ dunif(0, 100)
-  sigma.P ~ dunif(0, 100)
-for(i in 1:2){
-  mu[i] ~ dnorm(0, 0.000001)
-}for(i in 1:24){
-  gamma[i] ~ dnorm(0, tau.P)
-}
-
-
-#Derived quantities
-  sigma2p <- sigma.P*sigma.P
-  sigma2e <- sigma.e*sigma.e
-  tau.P <- 1 / sigma2p
-  tau.e <- 1 / sigma2e
-  diff <- mu[1] - mu[2]
-}
-
-"
-
-
-The above model is coded within R and assigned to a string of text (“modelSpec”). Using R to fit the above model requires
-1. loading the rjags library (Plummer, 2016)
-2. storing the model definition to an external text file (“censoredMixedModel.txt”), using the function writeLines();
-3. sorting the dataset in an ascending class order so that the individuals in the first diameter class begin the data set (from row 1 to row 639) and the individuals in the 5th diameter class end it (from row 2,131 to row 2,441);
-4. creating two lists: a list of all the data needed for the analysis (win.data) and a list of the initial values for the parameters to be estimated (init); and
-5. sending the model specification and the other data to JAGS, using the function jags.model(), provided by the package rjags; this function returns samples from the posterior distribution for all the estimated parameters. 
-
-library(rjags)
-writeLines(modelSpec, con="censoredMixedModel.txt")
-dataset_jags <- datasetR[order(datasetR$Class), ]
-N1 <- 639; N2 <- 2130; N <- 2441
-win.data <- list(low = dataset_jags$sizeLow, high=dataset_jags$sizeUp, 
-                 N1=N1, N2=N2, N=N, Group=factor(dataset_jags$Group),
-                 Photo=factor(dataset_jags$Photo))
-
-init <- list (mu = c(7.3, 8.7), sigma.e = 1.7, sigma.P=0.5)
-mcmc <- jags.model("censoredMixedModel.txt",data = win.data, inits = init, 
-                   n.chains = 4, n.adapt = 100)
-params <- c("mu", "sigma.e", "sigma.P", "sigma2p", "sigma2e", "diff")
-res3 <- coda.samples(mcmc, params, n.iter=10000)
-burn.in <- 1000
-summary(window(res3, start=burn.in))
-
-#[Output is shown in Table 7 in the main paper]
-
-SAS code
-Should we show the code for PROC MCMC?
-Example 3: fitting a generalized linear model (GLM) for interval-censored data
-SAS code
-We can exploit the fact that the kernels of the multinomial and Poisson likelihoods are identical. Thus, we can model the observed counts  as Poisson random variables with expectation   (McCullagh and Nelder 1989; §6.4.2; Keen and Engel, 1997).
-The cutpoints   are known. If the variance   were known as well, we would have had a regular GLM with link functions given by the Equation (4) to (6) in the main paper. We can use the ML estimate of the variance; below, we try this in GLIMMIX—and it works perfectly.
-
-
-/*can we fit threshold model using the known thresholds?*/
-data StarchGrainsSAS_Counts;
-set datasetSAS;
-count=n1; cat=1; output;
-count=n2; cat=2; output;
-count=n3; cat=3; output;
-count=n4; cat=4; output;
-count=n5; cat=5; output;
-run;
-
-/*yes we can if the variance is known!*/
-proc glimmix data=StarchGrainsSAS_Counts method=quad;
-class groups photo;
-sigma=6.5931;
-t1=4; t2=8; t3=12; t4=16;
-if cat=1 then _mu_=n*probnorm((t1-_linp_)/sigma);
-if cat=2 then _mu_=n*( probnorm((t2-_linp_)/sigma) - probnorm((t1-_linp_)/sigma) );
-if cat=3 then _mu_=n*( probnorm((t3-_linp_)/sigma) - probnorm((t2-_linp_)/sigma) );
-if cat=4 then _mu_=n*( probnorm((t4-_linp_)/sigma) - probnorm((t3-_linp_)/sigma) );
-if cat=5 then _mu_=n*(1-probnorm((t4-_linp_)/sigma));
-model count=groups/dist=poisson solution;
-random int/sub=photo;
-run;
-                                          Fit Statistics
-
-                                -2 Log Likelihood             820.31
-                                AIC  (smaller is better)      826.31
-                                AICC (smaller is better)      826.51
-                                BIC  (smaller is better)      829.84
-                                CAIC (smaller is better)      832.84
-                                HQIC (smaller is better)      827.24
-
-
-                                   Fit Statistics for Conditional
-                                            Distribution
-
-                              -2 log L(count | r. effects)      793.55
-                              Pearson Chi-Square                223.08
-                              Pearson Chi-Square / DF             1.86
-
-
-                                   Covariance Parameter Estimates
-
-                                                                Standard
-                            Cov Parm     Subject    Estimate       Error
-
-                            Intercept    Photo        0.4424      0.2862
-
-
-                                    Solutions for Fixed Effects
-
-                                               Standard
-Effect       Groups    Estimate       Error       DF    t Value    Pr > |t|
-
-Intercept                8.6992      0.2721       22      31.97      <.0001
-Groups       1          -1.4625      0.3994       96      -3.66      0.0004
-Groups       2                0           .        .        .         .
-
-This agrees almost exactly with the corresponding output from NLMIXED (apart from the "residual" degrees of freedom). 
-The only problem is how to estimate the variance. A simple option is a grid search for the optimal value of   . Another idea is to use Pregibon's (1980) approach for models with parameters in the link function (also see McCullagh and Nelder, 1989; § 11.3), but this is tricky because the link function for the Poisson approach looks messy. 
-Here is the solution within a GLMM framework. If we blow up the data to the level of individual grains, we can fit a random grain effect   in order to properly model and estimate the residual variance. At an individual grain level (that is, for a particular grain), we have   and the observed count is zero for all categories except for the category the grain falls into; for this category, the count equals one. 
-If we use a probit link with unit variance, the total residual variance will be parameterized as  . This works whenever σ² ≥ 1 (in this example  ). If  , we need to use a scale parameter   in the probit link. Our model can then be stated as follows:
-
- ,	(7)
- 	(8)
- 	(9)
- 	(10)
- 	(11)
-
-Then, conditionally on the random effect  , the multinomial probabilities are
- ,	(12)
-    for   , and	(13)
- .	(14)
-
-To implement the above idea, we need to supply the user-defined link functions (12) to (14) and play with the scaling factor so that  . In our example, this holds for  .
-
-
-/*Another idea: Blow up the data to individual grains and fit additional random effect for units*/
-
-data StarchGrainsSAS_Individual;
-set StarchGrainsSAS_Counts;
-n=1;
-do grain=1 to count;
-  do cat2=1 to 5;
-    if cat2=cat then count2=1; else count2=0; 
-    output;
-  end;
-end;
-run;
-
-proc glimmix data=StarchGrainsSAS_Individual method=quad;
-class groups photo grain cat;
-theta=4;
-t1=4; t2=8; t3=12; t4=16;
-if cat2=1 then _mu_=n*probnorm((t1-_linp_)/theta);
-if cat2=2 then _mu_=n*( probnorm((t2-_linp_)/theta) - probnorm((t1-_linp_)/theta) );
-if cat2=3 then _mu_=n*( probnorm((t3-_linp_)/theta) - probnorm((t2-_linp_)/theta) );
-if cat2=4 then _mu_=n*( probnorm((t4-_linp_)/theta) - probnorm((t3-_linp_)/theta) );
-if cat2=5 then _mu_=n*(1-probnorm((t4-_linp_)/theta));
-model count2=groups/dist=poisson solution;
-random int/sub=photo*grain*cat;
-run;
-
-                        Convergence criterion (GCONV=1E-8) satisfied.
-
-
-                                        Fit Statistics
-
-                             -2 Log Likelihood           12531.05
-                             AIC  (smaller is better)    12537.05
-                             AICC (smaller is better)    12537.05
-                             BIC  (smaller is better)    12554.45
-                             CAIC (smaller is better)    12557.45
-                             HQIC (smaller is better)    12543.37
-
-
-                                Fit Statistics for Conditional
-                                         Distribution
-
-                           -2 log L(count2 | r. effects)     9173.19
-                           Pearson Chi-Square                3549.85
-                           Pearson Chi-Square / DF              0.29
-
-
-                                Covariance Parameter Estimates
-
-                                                                 Standard
-                     Cov Parm     Subject            Estimate       Error
-
-                     Intercept    Photo*grain*cat     27.8470      1.8031
-
-
-                                  Solutions for Fixed Effects
-
-                                             Standard
-Effect       Groups    Estimate       Error       DF    t Value    Pr > |t|
-
-Intercept                8.6670      0.1919     2439      45.16      <.0001
-Groups       1          -1.3264      0.2851     9764      -4.65      <.0001
-
-
-                                     The GLIMMIX Procedure
-
-                                  Solutions for Fixed Effects
-
-                                             Standard
- Effect       Groups    Estimate       Error       DF    t Value    Pr > |t|
- Groups       2                0           .        .        .         .
-
-
-                                Type III Tests of Fixed Effects
-
-                                      Num      Den
-                        Effect         DF       DF    F Value    Pr > F
-                        Groups          1     9764      21.64    <.0001
-
-
-The above result agrees with the full ML estimates obtained with NLMIXED. Adding a random photo effect, we obtain the following result:
-
-
-/*add random photo effect*/
-proc glimmix data=StarchGrainsSAS_Individual method=laplace;
-class groups photo grain cat;
-theta=4;
-t1=4; t2=8; t3=12; t4=16;
-if cat2=1 then _mu_=n*probnorm((t1-_linp_)/theta);
-if cat2=2 then _mu_=n*( probnorm((t2-_linp_)/theta) - probnorm((t1-_linp_)/theta) );
-if cat2=3 then _mu_=n*( probnorm((t3-_linp_)/theta) - probnorm((t2-_linp_)/theta) );
-if cat2=4 then _mu_=n*( probnorm((t4-_linp_)/theta) - probnorm((t3-_linp_)/theta) );
-if cat2=5 then _mu_=n*(1-probnorm((t4-_linp_)/theta));
-model count2=groups/dist=poisson solution;
-random int/sub=photo;
-random grain*cat/sub=photo;
-run;
-
-                        Convergence criterion (GCONV=1E-8) satisfied.
-
-
-                                        Fit Statistics
-
-                             -2 Log Likelihood           12550.22
-                             AIC  (smaller is better)    12558.22
-                             AICC (smaller is better)    12558.22
-                             BIC  (smaller is better)    12562.93
-                             CAIC (smaller is better)    12566.93
-                             HQIC (smaller is better)    12559.47
-
-
-                                Fit Statistics for Conditional
-                                         Distribution
-
-                           -2 log L(count2 | r. effects)     9269.27
-                           Pearson Chi-Square                3659.44
-                           Pearson Chi-Square / DF              0.30
-
-
-                                Covariance Parameter Estimates
-
-                                                             Standard
-                         Cov Parm     Subject    Estimate       Error
-
-                         Intercept    Photo        0.4184      0.2710
-                         grain*cat    Photo       25.3592      1.6184
-
-
-                                     The GLIMMIX Procedure
-
-                                  Solutions for Fixed Effects
-
-                                             Standard
-Effect       Groups    Estimate       Error       DF    t Value    Pr > |t|
-Intercept                8.7166      0.2653       22      32.85      <.0001
-Groups       1          -1.4475      0.3892     9764      -3.72      0.0002
-Groups       2                0           .        .        .         .
-
-
-                                Type III Tests of Fixed Effects
-
-                                      Num      Den
-                        Effect         DF       DF    F Value    Pr > F
-                        Groups          1     9764      13.83    0.0002
-
-
-To get this to run, we had to use the Laplace method instead of adaptive Gaussian quadrature with three quadrature points; the computer, unfortunately, went out of memory. It is likely due to the smaller accuracy of the Laplace approximation this approach uses that the results do not agree so well with those of NLMIXED.
-So, this approach works and has all the virtues of using a GLMM framework, but it is computationally more demanding than the direct approach using NLMIXED.
-
-References
-H. Wickham. Reshaping data with the reshape package. Journal of Statistical Software, 21(12), 2007.
-Russell Lenth (2018). emmeans: Estimated Marginal Means, aka Least-Squares Means. R package version 1.2.3. https://CRAN.R-project.org/package=emmeans
-Terry M. Therneau, Patricia M. Grambsch (2000). _Modeling
-Survival Data: Extending the Cox Model_. Springer, New York.
-ISBN 0-387-98784-3.
-
-Venables, W. N. & Ripley, B. D. (2002) Modern Applied
-  Statistics with S. Fourth Edition. Springer, New York.
-  ISBN 0-387-95457-0
-
-Martyn Plummer (2016). rjags: Bayesian Graphical Models
-  using MCMC. R package version 4-6.
-  https://CRAN.R-project.org/package=rjags
-
+#References

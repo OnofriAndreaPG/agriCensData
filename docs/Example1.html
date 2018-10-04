@@ -328,13 +328,13 @@ library(emmeans)
 library(survival)
 data(BBsurvey)
 head(BBsurvey)</code></pre>
-<pre><code>##   X Herbicide   L  U midPoint
-## 1 1         A 0.1  5     2.55
-## 2 2         A 0.1  5     2.55
-## 3 3         A 5.0 25    15.00
-## 4 4         A 5.0 25    15.00
-## 5 5         B 0.1  5     2.55
-## 6 6         B 0.1  5     2.55</code></pre>
+<pre><code>##   Plot Herbicide   L  U midPoint
+## 1    1         A 0.1  5     2.55
+## 2    2         A 0.1  5     2.55
+## 3    3         A 5.0 25    15.00
+## 4    4         A 5.0 25    15.00
+## 5    5         B 0.1  5     2.55
+## 6    6         B 0.1  5     2.55</code></pre>
 <hr />
 </div>
 <div id="a-traditional-anova-fit" class="section level1">
@@ -357,12 +357,13 @@ CLD(means, Letter = LETTERS, sort=F)</code></pre>
 ## Confidence level used: 0.95 
 ## P value adjustment: tukey method for comparing a family of 9 estimates 
 ## significance level used: alpha = 0.05</code></pre>
+<p>By using the traditional ANOVA, it is clear that we have circumvented the problem of censoring, by pretending that the observations are more reliable than they actually are.</p>
 <hr />
 </div>
 <div id="a-survival-model" class="section level1">
 <h1>A ‘survival’ model</h1>
 <p>The body of methods dealing with censored data is usually known as survival analysis, as data relating to the survival of individuals are very often censored. Obviously, we can use survival analysis with all types of censored data, also when they have nothing to do with the survival of an individual.</p>
-<p>In order to fit this model, we need to load the survival package <span class="citation">(Therneau 1999)</span> and use the ‘survereg()’ function within this package. The coding is very similar to that used by the function ‘lm()’; the only difference is that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner with which the data were harvested.</p>
+<p>In order to fit a ‘survival’ model, we need to load the survival package <span class="citation">(Therneau 1999)</span> and use the ‘survereg()’ function within this package. The coding is very similar to that used by the function ‘lm()’; the only difference is that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner with which the data were harvested.</p>
 <pre class="r"><code>library(survival)
 mod.surv &lt;- survreg(Surv(L, U, type=&quot;interval2&quot;) ~ Herbicide, 
   dist=&quot;gaussian&quot;, data = BBsurvey)
