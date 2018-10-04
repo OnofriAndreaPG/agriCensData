@@ -376,7 +376,7 @@ head(datasetR, 10)</code></pre>
 ## 8     P1     1    c1      NA      4
 ## 9     P1     1    c1      NA      4
 ## 10    P1     1    c1      NA      4</code></pre>
-<p>Now we can fit a multinomial model, by using the ‘multinom()’ function in the ‘nnet’ package <span class="citation">(<span class="citeproc-not-found" data-reference-id="venables2002_Modernappliedstatisticsa"><strong>???</strong></span>)</span>. The proportions of grains in the five classes for the two producers can be retreived by the multinomial fit by using the usual ‘emmeans()’ function.</p>
+<p>Now we can fit a multinomial model, by using the ‘multinom()’ function in the ‘nnet’ package <span class="citation">(Venables et al. 2002)</span>. The proportions of grains in the five classes for the two producers can be retreived by the multinomial fit by using the usual ‘emmeans()’ function.</p>
 <pre class="r"><code>mmod &lt;- multinom(Class ~ Group, datasetR)</code></pre>
 <pre><code>## # weights:  15 (8 variable)
 ## initial  value 3928.637944 
@@ -495,6 +495,9 @@ summary(surv.reg1)</code></pre>
 <div id="refs" class="references">
 <div id="ref-therneau_package_1999">
 <p><span style="font-variant: small-caps;">Therneau, T</span> (1999) <em>A Package for Survival Analysis in S</em>. R package version 2.36-14, Survival</p>
+</div>
+<div id="ref-venables2002_Modernappliedstatisticsa">
+<p><span style="font-variant: small-caps;">Venables, WN, BD Ripley, WN Venables</span> (2002) <em>Modern applied statistics with S</em>4th ed. Springer, New York</p>
 </div>
 <div id="ref-wickham2007_ReshapingDatareshape">
 <p><span style="font-variant: small-caps;">Wickham, H</span> (2007) Reshaping Data with the reshape Package. <em>Journal of Statistical Software</em> <strong>21</strong></p>

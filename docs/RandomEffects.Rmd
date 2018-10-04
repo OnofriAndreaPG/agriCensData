@@ -110,6 +110,8 @@ Finally, the priors for all estimands are defined. For both variance parameters,
 
 In the above model definition we also added some derived quantities, to be calculated from the estimated parameters, such as the difference between $\mu_1$ and $\mu_2$.
 
+---
+
 #Model fitting in R
 
 Once the models has been coded and assigned to a string of text (“modelSpec”), before fitting the model, we have to
@@ -120,6 +122,7 @@ Once the models has been coded and assigned to a string of text (“modelSpec”
 4. Define a few variables that are used in the model definition, such as N (the number of observations), N1 (the number of left-censored observations, i.e. 639) and N2 (the number of left-censored + interval censored observations, i.e. 2130).
 
 ```{r}
+library(agriCensData)
 writeLines(modelSpec, con="censoredMixedModel.txt")
 data(starchGrainU)
 dataset_jags <- starchGrainU[order(starchGrainU$Class), ]
@@ -138,7 +141,8 @@ Once the samples from the posterior have been obtained, we specify that 1000 sam
 
 From the posterior, we obtain the mean and median as measures of central tendency, the standard deviation as a measure of uncertainty, and credible intervals, which are the Bayesian analog to confidence intervals.
 
-```{r}
+```{r message=F}
+library(rjags)
 win.data <- list(low = dataset_jags$sizeLow, high=dataset_jags$sizeUp, 
                  N1=N1, N2=N2, N=N, Group=factor(dataset_jags$Group),
                  Photo=factor(dataset_jags$Photo))
@@ -153,5 +157,7 @@ summary(window(res3, start=burn.in))
 ```
 
 We can see that the the expected difference between the producers is equal to -1.477 and there is a 95% posterior probability that the true difference is between -2.3763 and -0.6164 and therefore it is different from 0 (please note that other runs of the model may bring to slightly different results). It is also interesting to note that the random effect for the photos has a variance component of 0.66, and its credible interval does not contain the 0.
+
+---
 
 #References
