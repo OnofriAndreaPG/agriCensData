@@ -39,10 +39,9 @@ library(drc)
 library(survival)
 library(emmeans)
 library(agriCensData)
-Germination <- germination
-save(Germination, file="Germination.rda")
-data(germination)
-head(germination)
+
+data(Germination)
+head(Germination)
 ```
 
 The dataset shows the data, the way they were collected, i.e. in the formo of counts ('counts') of germinated seeds at each assessment time ('obsT') and temperature )'temp'). It is important to note that it is not true that e,g, 12 seeds germinated 3 days After the Beginning of the Assay (ABA), they indeed germinated in an unknowm moment between 1 and 3 ABA.
