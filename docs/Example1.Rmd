@@ -1,4 +1,5 @@
 ---
+title: 'Example 1. Analysing visually recorded cover-abundance data'
 author: "A. Onofri, H-P. Piepho and Marcin Kozak"
 bibliography: GroupedData.bib
 csl: weed-research.csl
