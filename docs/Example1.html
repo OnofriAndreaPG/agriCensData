@@ -12,7 +12,7 @@
 <meta name="author" content="A. Onofri, H-P. Piepho and Marcin Kozak" />
 
 
-<title>Example 1. Analyzing visually recorded cover-abundance data</title>
+<title>Example 1. Analysing visually recorded cover-abundance data</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -312,7 +312,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Example 1. Analyzing visually recorded cover-abundance data</h1>
+<h1 class="title toc-ignore">Example 1. Analysing visually recorded cover-abundance data</h1>
 <h4 class="author"><em>A. Onofri, H-P. Piepho and Marcin Kozak</em></h4>
 
 </div>
@@ -321,8 +321,8 @@ div.tocify {
 <hr />
 <div id="the-dataset" class="section level1">
 <h1>The dataset</h1>
-<p>The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against <em>Sorghum halepense</em> in maize. Three weeks after the treatment, the cover-abundance of <em>S. halepense</em> was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as ‘L’ (lower limit) and ‘U’ (upper limit). The ‘midPoint’ represents the center of each class. Each dataset record represent one field plot.</p>
-<p>First of all, we need to read the data into R. As the dataset is contained in the companion package ‘agriCensData’, we need to load this package first, assuming that it has been already installed in the system (as shown <a href="https://onofriandreapg.github.io/agriCensData/index.html">here</a> ). Together with this package, we also load all the other necessary packages.</p>
+<p>The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against <em>Sorghum halepense</em> in maize. Three weeks after the treatment, the cover-abundance of <em>S. halepense</em> was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as “L” (lower limit) and “U” (upper limit). The “midPoint” represents the center of each class. Each dataset record represent one field plot.</p>
+<p>First of all, we need to read the data into R. As the dataset is contained in the companion package ‘agriCensData’, we need to load this package first, assuming that it has been already installed in the system (as shown <a href="https://onofriandreapg.github.io/agriCensData/index.html">here</a> NOT ENOUGH TO GIVE JUST REFERENCE TO INDEX.HTML?). Together with this package, we also load all the other necessary packages.</p>
 <pre class="r"><code>library(agriCensData)
 library(emmeans)
 library(survival)
@@ -339,10 +339,23 @@ head(BBsurvey)</code></pre>
 </div>
 <div id="a-traditional-anova-fit" class="section level1">
 <h1>A traditional ANOVA fit</h1>
-<p>Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this is a real number, we may fit a traditional ANOVA model. Means and multiple comparison testing may be performed by using the emmeans package <span class="citation">(Lenth 2016)</span>.</p>
+<p>Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this is a real number, we may fit a traditional ANOVA model. Means may be found by using the emmeans package <span class="citation">(Lenth 2016)</span>. Although we have not done this in the main paper, multiple comparison testing may be performed by using the same package.</p>
 <pre class="r"><code>mod.aov &lt;- lm(midPoint ~ Herbicide, data = BBsurvey)
-means &lt;- emmeans(mod.aov, ~Herbicide) 
-CLD(means, Letter = LETTERS, sort=F)</code></pre>
+means &lt;- emmeans(mod.aov, ~ Herbicide) 
+means</code></pre>
+<pre><code>##  Herbicide  emmean       SE df  lower.CL upper.CL
+##  A          8.7750 5.501751 27 -2.513661 20.06366
+##  B          8.7750 5.501751 27 -2.513661 20.06366
+##  C          8.1375 5.501751 27 -3.151161 19.42616
+##  D          8.1500 5.501751 27 -3.138661 19.43866
+##  E          1.3000 5.501751 27 -9.988661 12.58866
+##  F         26.2500 5.501751 27 14.961339 37.53866
+##  G          8.7625 5.501751 27 -2.526161 20.05116
+##  H          8.1625 5.501751 27 -3.126161 19.45116
+##  I         56.2500 5.501751 27 44.961339 67.53866
+## 
+## Confidence level used: 0.95</code></pre>
+<pre class="r"><code>CLD(means, Letter = LETTERS, sort = F)</code></pre>
 <pre><code>##  Herbicide  emmean       SE df  lower.CL upper.CL .group
 ##  A          8.7750 5.501751 27 -2.513661 20.06366  A    
 ##  B          8.7750 5.501751 27 -2.513661 20.06366  A    
@@ -365,10 +378,10 @@ CLD(means, Letter = LETTERS, sort=F)</code></pre>
 <p>The body of methods dealing with censored data is usually known as survival analysis, as data relating to the survival of individuals are very often censored. Obviously, we can use survival analysis with all types of censored data, also when they have nothing to do with the survival of an individual.</p>
 <p>In order to fit a ‘survival’ model, we need to load the survival package <span class="citation">(Therneau 1999)</span> and use the ‘survereg()’ function within this package. The coding is very similar to that used by the function ‘lm()’; the only difference is that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner with which the data were harvested.</p>
 <pre class="r"><code>library(survival)
-mod.surv &lt;- survreg(Surv(L, U, type=&quot;interval2&quot;) ~ Herbicide, 
-  dist=&quot;gaussian&quot;, data = BBsurvey)
-means.surv &lt;- emmeans(mod.surv, ~Herbicide) 
-CLD(means.surv, Letters = LETTERS, sort=F)</code></pre>
+mod.surv &lt;- survreg(Surv(L, U, type = &quot;interval2&quot;) ~ Herbicide, 
+  dist = &quot;gaussian&quot;, data = BBsurvey)
+means.surv &lt;- emmeans(mod.surv, ~ Herbicide) 
+CLD(means.surv, Letters = LETTERS, sort = F)</code></pre>
 <pre><code>##  Herbicide    emmean       SE df   lower.CL  upper.CL .group
 ##  A          6.755275 3.684287 26 -0.8178844 14.328434  AB   
 ##  B          6.755275 3.684287 26 -0.8178844 14.328434  AB   
@@ -380,11 +393,10 @@ CLD(means.surv, Letters = LETTERS, sort=F)</code></pre>
 ##  H          5.903803 3.631445 26 -1.5607388 13.368345  A    
 ##  I         57.335193 3.772500 26 49.5807077 65.089678    C  
 ## 
-## Results are given on the Surv (not the response) scale. 
 ## Confidence level used: 0.95 
 ## P value adjustment: tukey method for comparing a family of 9 estimates 
 ## significance level used: alpha = 0.05</code></pre>
-<p>As we note on the main paper, with survival analysis the means are estimated with higher precision—so we can also exclude herbicide B from the group of those with highest weed control ability.</p>
+<p>As we note in the main paper (<em>Literature reference, when available</em>), with survival analysis the means are estimated with higher precision, so we can also exclude herbicide B from the group of those with highest weed control ability.</p>
 <hr />
 </div>
 <div id="references" class="section level1 unnumbered">

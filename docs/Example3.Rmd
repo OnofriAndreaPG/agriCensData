@@ -22,9 +22,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The dataset
 
-This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers, collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (<4, 4-8, 8-12, 12-16, >16 µm). For each producer, the diameters were measured from twelve photos taken with a microscope.
+This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers, collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (<4, 4-8, 8-12, 12-16, >16 $\mu m$). For each producer, the diameters were measured from twelve photos taken with a microscope.
 
-The original dataset is in gouped form and one record represents a photo (12 photos per each producer) and shows the number of starch grains in each of the 5 diameter classes. The producer is indicated in the 'Group' column. The dataset in this form is available in the 'agriCensData' package, which can be installed from gitHub (see [here](https://onofriandreapg.github.io/agriCensData/index.html))
+The original dataset is in a grouped form; one record represents a photo (12 photos per each producer) and shows the number of starch grains in each of the 5 diameter classes. The producer is indicated in the 'Group' column. The dataset in this form is available in the 'agriCensData' package, which can be installed from gitHub (see [here](https://onofriandreapg.github.io/agriCensData/index.html))
 
 ```{r message=F}
 library(reshape)
@@ -43,26 +43,28 @@ head(starchGrain, 10)
 
 The grouped nature of the data suggests we should analyse counts. For each photo, all starch grains should be included in one and only one class, so that the proportions of seeds in the five classes should sum up to one.
 
-Therefore, it is reasonable to think about multinomial logit model, where we treat the classes as nominal categories. In simple terms, a multinomial logit model considers the proportions of grains in each class and how this is affected by the producer. Since this analysis does not require any assumptions about the real diameter size and its distribution within the population, the method is non-parametric.
+Therefore, it is reasonable to think about multinomial logit model, where we treat the classes as nominal categories. In simple terms, a multinomial logit model considers the proportions of grains in each class and how these proportions are affected by the producer. Since this analysis does not require any assumptions about the real diameter size and its distribution within the population, the method is non-parametric.
 
-In order to fit a multinomial logit model in R it is useful to reorganise the above dataset in ungrouped form, so that we have one line for each starch grain (2441 lines), containing all its information, i.e. the photo where it was counted, the class to which it was assigned and the limits of the class (sizeLow and sizeUp). This reordering can be done by using the facilities provided in the reshape package [@wickham2007_ReshapingDatareshape]
+In order to fit a multinomial logit model in R, it is useful to reorganise the above dataset in an ungrouped form, so that we have one line for each starch grain (2441 lines), containing all its information, i.e. the photo where it was counted, the class to which it was assigned, and the limits of the class (sizeLow and sizeUp). This reordering can be done by using the facilities provided in the reshape package [@wickham2007_ReshapingDatareshape]
 
 ```{r}
-moltenData <- melt(starchGrain, id=c("Group","Photo" ))
-datasetR <- moltenData[rep(seq_len(nrow(moltenData)), moltenData$value),][,1:3]
+moltenData <- melt(starchGrain, id = c("Group","Photo"))
+datasetR <- moltenData[rep(seq_len(nrow(moltenData)), moltenData$value), ][, 1:3]
 names(datasetR)[3] <- "Class"
 row.names(datasetR) <- 1:2441
 rm(moltenData)
 
 #Imputing the diameter interval for each starch grain
-datasetR$sizeLow = with(datasetR, ifelse(Class=="c1", NA,
-        ifelse(Class=="c2", 4,
-          ifelse(Class=="c3", 8, 
-            ifelse(Class=="c4", 12, 16)))) ) 
-datasetR$sizeUp = with(datasetR, ifelse(Class=="c1", 4,
-        ifelse(Class=="c2", 8,
-          ifelse(Class=="c3", 12, 
-            ifelse(Class=="c4", 16, NA)))) )
+datasetR$sizeLow = with(datasetR, 
+                        ifelse(Class == "c1", NA,
+                               ifelse(Class == "c2", 4,
+                                      ifelse(Class == "c3", 8, 
+                                             ifelse(Class == "c4", 12, 16)))) ) 
+datasetR$sizeUp = with(datasetR, 
+                       ifelse(Class == "c1", 4,
+                              ifelse(Class == "c2", 8,
+                                     ifelse(Class == "c3", 12, 
+                                            ifelse(Class == "c4", 16, NA)))) )
 head(datasetR, 10)
 ```
 
@@ -79,41 +81,42 @@ mmodNull <- multinom(Class ~ 1, datasetR)
 anova(mmod, mmodNull)
 ```
 
-The difference between producers is highly significant (P = 1.34e-10). Therefore, we can try to compare the proportions in each class for the two producers. This can be easily done by using the usual 'emmeans()' function.
+The difference between producers is highly significant (P = 1.34e-10). Therefore, we can try to compare the proportions in each class for the two producers. This can be easily done by using the usual 'emmeans()' function. The same function can be used to perform multiple comparison testing, although we have not done this in our main paper.
+
 
 ```{r}
-props <- emmeans(mmod, ~Group|Class)
+props <- emmeans(mmod, ~ Group | Class)
 props
-CLD(props, Letters=letters)
+CLD(props, Letters = letters)
 ```
 
-We clearly see that the producer P1 has grown tubers with higher proportions of starch grains in the 5th class and lower on the 2nd.
+We see that the producer P1 grew tubers with higher proportions of starch grains in the 5th class and lower in the 2nd.
 
 This unordered multinomial fit is not wrong, but it is sub-optimal for several reasons:
 
 1.	It is not parsimonious. Indeed, we needed to estimate eight parameters (four proportions per producer since the fifth one follows from those four estimated). As we will show later, it is possible to fit a meaningful model also with fewer parameters.
-2.	Indirectly, we demonstrated that the second producer has starch grains of smaller size, although we could not calculate several important statistics, such as the mean diameters for the two producers or the diameter variance. This is due to the fact that we treated the classes as nominal, neglecting that they have natural ordering and distances.
+2.	Indirectly, we demonstrated that the second producer has starch grains of smaller size, although we could not calculate several important statistics, such as the mean diameters for the two producers or the diameter variance. This is because we treated the classes as nominal, neglecting that they have natural ordering and distances.
 3.	We neglected that starch grains are clustered within photos, which means that they are stochastically dependent.
 
 ---
 
 #A survival model fit
 
-We should recognise that, for each starch grain, we indeed measured the diameter, although our precision was rather low. Therefore, we did not menage to obtain a value, but we obtained an interval. In order to fully respect our data collection process, we should model such intervals and not only the counts.
+We should recognise that, for each starch grain, we indeed measured the diameter, although our precision was rather low. Therefore, we did not manage to obtain a value, but instead we obtained an interval. In order to fully respect our data collection process, we should model such intervals and not only the corresponding counts.
 
-We can do this by using a 'survival' model, assuming that distribution of starch grain diameters in the population is Gaussian. As in the other examples, we can use the 'survreg' function in the survival package [@therneau_package_1999].
+We can do this by using a 'survival' model, assuming that the distribution of starch grain diameters in the population is Gaussian. As in the other examples, we can use the 'survreg' function in the survival package [@therneau_package_1999].
 
 ```{r}
-surv.reg1 <- survreg(Surv(sizeLow, sizeUp, type="interval2") ~ Group,
- dist="gaussian", data=datasetR)
+surv.reg1 <- survreg(Surv(sizeLow, sizeUp, type = "interval2") ~ Group,
+                     dist = "gaussian", data = datasetR)
 summary(surv.reg1)
 ```
 
-We now see that the producer P1 showed starch grains with an average diameter of 7.34 $\mu m$ and the difference between P1 and P2 was 1.33 $\mu m$, which was significantly different from 0 (p = 3.3e-06).
+We now see that the producer P1 had starch grains with an average diameter of 7.34 $\mu m$ and the difference between P1 and P2 was 1.33 $\mu m$, which was significantly different from 0 (p = 3.3e-06).
 
-We argue that the results of this survival model fit are much clearer than those of the multinomial fit and, with this second fit, we have better respected the way the data collecting process.
+We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected.
 
-However, please not that our survival model is still not ok, because it does not respect the point 3 above, i.e. we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.
+However, do note that our survival model is still not fully OK, because it does not respect the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.
 
 ---
 

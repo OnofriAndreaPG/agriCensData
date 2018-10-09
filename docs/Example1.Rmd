@@ -1,5 +1,4 @@
 ---
-title: 'Example 1. Analyzing visually recorded cover-abundance data'
 author: "A. Onofri, H-P. Piepho and Marcin Kozak"
 bibliography: GroupedData.bib
 csl: weed-research.csl
@@ -22,9 +21,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The dataset
 
-The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as ‘L’ (lower limit) and ‘U’ (upper limit). The ‘midPoint’ represents the center of each class. Each dataset record represent one field plot.
+The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as "L" (lower limit) and "U" (upper limit). The "midPoint" represents the center of each class. Each dataset record represent one field plot.
 
-First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html) ). Together with this package, we also load all the other necessary packages.
+First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html) NOT ENOUGH TO GIVE JUST REFERENCE TO INDEX.HTML?). Together with this package, we also load all the other necessary packages.
 
 
 ```{r message=F}
@@ -39,12 +38,14 @@ head(BBsurvey)
 
 #A traditional ANOVA fit
 
-Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this is a real number, we may fit a traditional ANOVA model. Means and multiple comparison testing may be performed by using the emmeans package [@lenth2016_LeastSquaresMeansPackage].
+Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this is a real number, we may fit a traditional ANOVA model. Means may be found by using the emmeans package [@lenth2016_LeastSquaresMeansPackage]. Although we have not done this in the main paper, multiple comparison testing may be performed by using the same package.
+
 
 ```{r}
 mod.aov <- lm(midPoint ~ Herbicide, data = BBsurvey)
-means <- emmeans(mod.aov, ~Herbicide) 
-CLD(means, Letter = LETTERS, sort=F)
+means <- emmeans(mod.aov, ~ Herbicide) 
+means
+CLD(means, Letter = LETTERS, sort = F)
 ```
 
 By using the traditional ANOVA, it is clear that we have circumvented the problem of censoring, by pretending that the observations are more reliable than they actually are.
@@ -57,15 +58,16 @@ The body of methods dealing with censored data is usually known as survival anal
 
 In order to fit a 'survival' model, we need to load the survival package [@therneau_package_1999] and use the 'survereg()' function within this package. The coding is very similar to that used by the function 'lm()'; the only difference is that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner with which the data were harvested.
 
+
 ```{r}
 library(survival)
-mod.surv <- survreg(Surv(L, U, type="interval2") ~ Herbicide, 
-  dist="gaussian", data = BBsurvey)
-means.surv <- emmeans(mod.surv, ~Herbicide) 
-CLD(means.surv, Letters = LETTERS, sort=F)
+mod.surv <- survreg(Surv(L, U, type = "interval2") ~ Herbicide, 
+  dist = "gaussian", data = BBsurvey)
+means.surv <- emmeans(mod.surv, ~ Herbicide) 
+CLD(means.surv, Letters = LETTERS, sort = F)
 ```
 
-As we note on the main paper, with survival analysis the means are estimated with higher precision—so we can also exclude herbicide B from the group of those with highest weed control ability.
+As we note in the main paper (*Literature reference, when available*), with survival analysis the means are estimated with higher precision, so we can also exclude herbicide B from the group of those with highest weed control ability.
 
 ---
 

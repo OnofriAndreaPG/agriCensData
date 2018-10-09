@@ -22,9 +22,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The dataset
 
-This simple dataset was taken from an unpublished experiment with *Lobelia erinus* L.. The germination behavior of a seed lot was tested at two different temperatures (15 and 25°C), by using one Petri dish with 100 seeds per temperature. Germinated seeds were counted every second day for 39 days and were removed from the Petri dishes. The aim is to quantify the effect of temperature on germination velocity, by comparing the time to 50% germination (T50) at both temperatures.
+This simple dataset was taken from an unpublished experiment with *Lobelia erinus* L. The germination behavior of a seed lot was tested at two different temperatures (15 and 25 &deg;C), by using one Petri dish with 100 seeds per temperature. Germinated seeds were counted every second day for 39 days and were removed from the Petri dishes. The aim is to quantify the effect of temperature on germination velocity, by comparing the time to 50% germination (T50) at both temperatures.
 
-Also for this example, we need to read the data into R, after having installed all the necessary packages.
+Let's read the data into R, after loading all the necessary packages.
 
 ```{r message=F}
 library(drc)
@@ -36,29 +36,30 @@ data(Germination)
 head(Germination)
 ```
 
-The dataset shows the data, the way they were collected, i.e. in the formo of counts ('counts') of germinated seeds at each assessment time ('obsT') and temperature )'temp'). It is important to note that it is not true that e,g, 12 seeds germinated 3 days After the Beginning of the Assay (ABA), they indeed germinated in an unknowm moment between 1 and 3 ABA.
+The dataset shows the way the data were collected, that is, in the form of counts ('counts') of germinated seeds at each assessment time ('obsT') and temperature ('temp'). It is important to note that it is not true that, for instance, 12 seeds germinated 3 days After the Beginning of the Assay (ABA) (look at the second raw of the dataset): actually, they germinated in an unknowm moment between 1 and 3 ABA.
 
 ---
 
 #A traditional nonlinear regression model
 
-The traditional method of data analysis is based on:
+The traditional method of data analysis is based on
 
-1. transforming the observed counts into cumulative proportions of germinated seeds
+1. transforming the observed counts into cumulative proportions of germinated seeds and
 2. fitting a Gaussian cumulative probability density function, using nonlinear least squares regression.
 
-We accomplished this part by using the 'drm()' function in the 'drc' package [@ritz2015_DoseResponseAnalysisUsing]. We decided to fit a log-normal ('LN.2()) probability density function, as the distribution of germination times within the population is expected to be log-normal. Please, note that the argument 'curveid' specifies that we need two curves (one per temperature) and the argument 'pmodels' specify that the first parameter (b: slope of the curve in the inflection point) is common for the two curves (~1), while the second (e: time to 50% germination; T50) depends on the temperature.
+We accomplished this part by using the 'drm()' function in the 'drc' package [@ritz2015_DoseResponseAnalysisUsing]. We decided to fit a log-normal ('LN.2()) probability density function, as the distribution of germination times within the population is expected to be log-normal. The argument 'curveid' specifies that we need two curves (one per temperature), and the argument 'pmodels' specify that the first parameter (b: slope of the curve in the inflection point) is common for the two curves (~1), while the second (e: time to 50% germination; T50) depends on the temperature.
 
 ```{r}
 cumProp <- as.numeric(unlist(with(Germination, 
                   tapply(counts, temp, cumsum) ))/100)
 
-mod <- drm(cumProp ~ obsT, fct=LN.2(), curveid=temp,
-           pmodels=list(~1, ~temp-1), data = Germination)
+mod <- drm(cumProp ~ obsT, fct = LN.2(), curveid = temp,
+           pmodels = list(~ 1, ~ temp - 1), 
+           data = Germination)
 summary(mod)
 ```
 
-As we noted in our paper, this traditional method of data analysis is suboptimal for several reasons:
+As  noted in the paper (*Literature reference, when available*), this traditional method of data analysis is suboptimal for several reasons:
 
 1. modelling cumulative proportions instead of observed counts does not match the real process of data collection
 2. nonlinear regression assumes that a certain proportion of germinated seeds is reached at the exact moment of observation, but this does not have to be true
@@ -68,22 +69,27 @@ As we noted in our paper, this traditional method of data analysis is suboptimal
 
 #A time-to-event model
 
-For this example, a time-to-event model is more appropriate than nonlinear regression. Time-to-event model is just another name for a survival model. This name is appropriate when we are studying the time to the occurence of an event, which is not the death.
+For this example, a time-to-event model is more appropriate than nonlinear regression. Time-to-event model is just another name for a survival model. This name is appropriate when we are studying the time to the occurence of an event that is not the death.
 
-In order to fit a time-to-event model in R, we could use the 'survreg()' function in the 'survival' package [@therneau_package_1999], as we did for the first example. The observational unit is the seed and, therefore, we need to reorganised the dataset, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay. Each record needs to be characterised by three variables: the temperature at which the seed was tested and the two limits of the interval within which it germinated (‘timeBef’ and ‘timeAf’). Seeds which already germinated at the first monitoring time have ‘timeBef’ equal to NA (not available). Seeds which did not germinate at the final monitoring time have ‘timeAf’ equal to NA. The process of data reorganisation can be done by using the following code, producing the dataset 'germination2'.
+In order to fit a time-to-event model in R, we could use the 'survreg()' function in the 'survival' package [@therneau_package_1999], as we did for the first example. The observational unit is the seed and, therefore, we need to reorganise the dataset, so that there is one record for each seed in the lot (200 records in all). For each temperature subset, records are added also for the seeds that did not germinate at the end of the assay. Each record needs to be characterised by three variables: the temperature at which the seed was tested and the two limits of the interval within which it germinated (`timeBef` and `timeAf`). Seeds which already germinated at the first monitoring time have `timeBef` equal to NA (not available). Seeds which did not germinate at the final monitoring time have `timeAf` equal to NA. The process of data reorganisation can be done by using the following code, producing the dataset `germination2`.
 
 ```{r}
-countsC <- with( Germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) ) 
+countsC <- with(
+  Germination,
+  c(counts[1:20], 
+    100 - sum(counts[1:20]), 
+    counts[21:40],
+    100 - sum(counts[21:40])) ) 
 
 Germination2 <- data.frame(
-  temp = rep(factor(rep(c(15, 20), each=21)), countsC),
+  temp = rep(factor(rep(c(15, 20), each = 21)), countsC),
   timeBef = rep(c(NA, Germination$obsT[1:20], NA, Germination$obsT[21:40]), countsC),
   timeAf = rep(c(Germination$obsT[1:20], NA, Germination$obsT[21:40], NA), countsC) )
 rm(countsC)
 head(Germination2, 10)
 ```
 
-Now we can fit a time-to-event model, by using a lognormal distribution of germination times (dist = “lognormal”). 
+Now we can fit a time-to-event model, by using a lognormal distribution of germination times (`dist = "lognormal"`). 
 
 ```{r}
 modTE1 <- survreg(Surv(timeBef, timeAf, type = "interval2") ~ temp,
@@ -91,19 +97,24 @@ modTE1 <- survreg(Surv(timeBef, timeAf, type = "interval2") ~ temp,
 summary(modTE1)
 ```
 
-This function returns three parameters: (i) the logarithm of the time to 50% germination (T50) at 15°C (Intercept), (ii) difference in log-T50 between 20 and 15°C, (iii) the standard deviation of the log-normal distribution of germination times, that is assumed to be unaffected by temperature (homoscedasticity). We may be interested on the T50 at both temperatures. We can retrive them by back-transforming the model parameters (e.g $exp(2.2415)$ and $exp(2.2415 - 0.6221)$), which is easily done by using the 'emmeans()' function in the 'emmeans' package [@lenth2016_LeastSquaresMeansPackage]   
+This function returns three parameters: (i) the logarithm of the time to 50% germination (T50) at 15 &deg;C (Intercept), (ii) the difference in log-T50 between 20 and 15 &deg;C, (iii) the standard deviation of the log-normal distribution of germination times, assumed to be unaffected by temperature (homoscedasticity). We may be interested in the T50 at both temperatures. We can retrive them by back-transforming the model parameters (e.g $exp(2.2415)$ and $exp(2.2415 - 0.6221)$), which is easily done by using the 'emmeans()' function in the 'emmeans' package [@lenth2016_LeastSquaresMeansPackage]   
 
 
 ```{r}
-emmeans(modTE1, ~temp, transform="response")
+emmeans(modTE1, ~ temp, transform = "response")
 ```
 
-The 'survreg()' function is a good tool to fit time-to-event models, although it has a notable limitation: it assumes that all individuals should experience the event of interest in one specific time, either before or after the end of the experiment. While this is acceptable with survival studies, in the case of germination assays there will almost always be a final fraction of dormant seeds, which will never germinate at the given environmental conditions. For this example, such fraction was negligible and, therefore, 'survreg()' gave a good fit.
+#A more general method to fit time-to-event models
 
-In general, with seed germination assays, it is necessary to use a time-to-event function which accounts for the final fraction of germinated seeds. In R, we can use the 'drm()' function in the 'drc' package. Please, note that the model call is very similar to the one we used for nonlinear regression, with the only differences of the dependent variable (the limits of the interval within which the germinations took place) and the 'type' argument, that has been explicitely set to 'event'. 
+The 'survreg()' function is a good tool to fit time-to-event models, although it has a notable limitation: it assumes that all individuals should experience the event of interest in one specific time, either before or after the end of the experiment. While this may be acceptable with survival studies, in the case of germination assays there will almost always be a final fraction of dormant seeds, which will never germinate at the given environmental conditions. For this example, such fraction was negligible and, therefore, 'survreg()' gave a good fit.
+
+In general, with seed germination assays, it is necessary to use a time-to-event function which accounts for the final fraction of germinated seeds. In R, we can use the `drm()` function in the `drc` package. This function works with datasets in grouped form, like the original dataset 'Germination', that we used for nonlinear regression, However, for each Petri dish, we need to add extra-rows for the final number ungerminated seeds. For each record, we should specify the temperature, the number of germinated seeds and the two limits of the interval within which those seeds germinated. For the ungerminated seeds, the lower limit of the interval is set to the final assessment time and the highesr limit is set to 'Inf' (see below).
+
+The model call is very similar to the one we used for nonlinear regression, with the only differences of the dependent variable (the limits of the interval within which the germinations took place) and the `type` argument, which has been explicitely set to `event`. 
 
 ```{r}
 countsC <- with( Germination, c(counts[1:20], 100 - sum(counts[1:20]), counts[21:40], 100 - sum(counts[21:40])) )
+
 
 Germination3 <- data.frame(
   temp = factor(rep(c(15, 20), each=21)),
@@ -117,7 +128,7 @@ modTE <- drm(counts ~ timeBef + timeAf, fct=LN.2(),
 summary(modTE)
 ```
 
-As we discuss in our paper, the difference between nonlinear regression and time-to-event regression mainly relates to standard errors.
+As we discuss in our paper (*Literature reference, when available*), the difference between nonlinear regression and time-to-event regression mainly relates to standard errors.
 
 ---
 
