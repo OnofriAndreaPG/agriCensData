@@ -12,7 +12,7 @@
 <meta name="author" content="A. Onofri, H-P. Piepho and Marcin Kozak" />
 
 
-<title>Example 3. Fitting a mixed effect survival model</title>
+<title>Example 3 continued. Fitting a mixed effect survival model</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -312,7 +312,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Example 3. Fitting a mixed effect survival model</h1>
+<h1 class="title toc-ignore">Example 3 continued. Fitting a mixed effect survival model</h1>
 <h4 class="author"><em>A. Onofri, H-P. Piepho and Marcin Kozak</em></h4>
 
 </div>
@@ -321,12 +321,12 @@ div.tocify {
 <hr />
 <div id="the-model-definition-in-jags-code" class="section level1">
 <h1>The model definition (in JAGS code)</h1>
-<p>In the previous session ( <a href="https://onofriandreapg.github.io/agriCensData/Example3.html">here</a> we have fitted a survival model to a dataset relating to potato starch grains assessed in size categories. Our analyses assumed that starch grains were independent, but they are not, as they are grouped by photo. Indeed, starch grains observed in the same photo can be correlated and thus similar to each other. In our paper, we discuss that neglecting this correlation we erroneously treated the 2,441 starch grains as 2,441 independent pieces of information, leading to overly small standard errors of our estimates.</p>
-<p>Including random effects in a survival model may be rather difficult, unless we use Bayesian methods. In our main paper, we already discussed the differences between traditional and Bayesian statistics; therefore, we will not make this point again here and we will concentrate on the fitting process. The model that we are going to fit is as follows:</p>
+<p>In the previous session (<a href="https://onofriandreapg.github.io/agriCensData/Example3.html">here</a> we have fitted a survival model to a dataset relating to potato starch grains assessed in size categories. Our analyses assumed that starch grains were independent, but they are not, since they are grouped by photo. Indeed, starch grains observed in the same photo can be correlated and thus similar to each other. In our paper, we discuss that neglecting this correlation we incorrectly treated the 2,441 starch grains as 2,441 independent pieces of information, leading to overly small standard errors of our estimates.</p>
+<p>Including random effects in a survival model is rather difficult, unless we use Bayesian methods. In our main paper, we already discussed the differences between traditional and Bayesian statistics; therefore, we will not make this point again here and we will concentrate on the fitting process. The model we are going to fit is as follows:</p>
 <p><span class="math display">\[ y_{ijk} = \mu_j+ \gamma_k + \varepsilon_{ijk} \]</span></p>
 <p>where <span class="math inline">\(y_{ijk}\)</span> i the diameter for the <span class="math inline">\(i-th\)</span> grain in the <span class="math inline">\(k-th\)</span> phot for the <span class="math inline">\(j-th\)</span> producer, <span class="math inline">\(\mu_j\)</span> is the mean diameter for the j-th producer, <span class="math inline">\(\gamma_k\)</span> is the random error for the <span class="math inline">\(k-th\)</span> photo, and <span class="math inline">\(\varepsilon_{ijk}\)</span> is the residual error term. We will assume that <span class="math inline">\(\varepsilon\)</span> is homoscedastic and normally distributed, with mean equal to zero and standard deviation equal to <span class="math inline">\(\sigma\)</span>. We will also assume that <span class="math inline">\(\gamma\)</span> (random photo effect) is normally distributed, independent on <span class="math inline">\(\epsilon\)</span>, with mean equal to 0 and standard deviation equal to <span class="math inline">\(\sigma_p\)</span>. This latter represents the photo-to-photo variability while the residual standard deviation represents the within-group (within-photo) variability.</p>
-<p>In order to fit the above model, we used the MCMC sampler provided with the freeware software JAGS (Just Another Gibbs Sampler), which can be invoked from an R session, by using the package ‘rjags’ <span class="citation">(Plummer 2016)</span>.</p>
-<p>The first step to the analysis is to specify a model (in JAGS code) in a text string (‘modelSpec’). This definition is reported below.</p>
+<p>In order to fit the above model, we used the MCMC sampler provided with the freeware software JAGS (Just Another Gibbs Sampler), which can be invoked from an R session by using the package ‘rjags’ <span class="citation">(Plummer 2016)</span>.</p>
+<p>The first step to the analysis is to specify a model (in JAGS code) in a text string (<code>modelSpec</code>), as we do below.</p>
 <pre class="r"><code># Save BUGS description of the model as a string
 modelSpec &lt;- &quot;
 data{
@@ -369,8 +369,8 @@ for (i in (N2+1):N) {
   sigma.P ~ dunif(0, 100)
 for(i in 1:2){
   mu[i] ~ dnorm(0, 0.000001)
-}for(i in 1:24){
-  gamma[i] ~ dnorm(0, tau.P)
+} for(i in 1:24){
+   gamma[i] ~ dnorm(0, tau.P)
 }
 
 #Derived quantities
@@ -381,43 +381,46 @@ for(i in 1:2){
   diff &lt;- mu[1] - mu[2]
 }
 &quot;</code></pre>
-<p>This definition contains an initial data step, where we create a new variable (‘zeros[i]’) by assigning a value of 0 to all observations. The reason why this data step is necessary will be clear later on.</p>
-<p>Successively, we have a model step, where we code the model that we want to fit. This returns the expected value for each observation (‘exp[i]’). Note the coding with double square brackets (‘mu[Group[i]]’) that is used to mean that ‘mu’ takes different values, depending on ‘Group[i]’.</p>
-<p>The next part codes the log-likelihood for the i-th observation. Please note that the observations are assumed to be sorted out, so that right-censored observations take the positions from 1 to N1, interval censored observations go from N1 to N2 and left-censored observations go from N2 to the end of the dataset. For each group, the negative log-likelihood is coded according to the Equations from 3 to 5 in our main paper and it is stored in the variable ‘phi’.</p>
-<p>At this stage, we need to make JAGS use ‘phi’ to calculate the likelihood for each observation. Such calculation would seem easy, as the likelihood is equal to ‘exp(-phi)’. Unfortunately, JAGS/BUGS can only calculate the likelihood by using a few pre-defined functions that do not provide a simple direct solution.</p>
-<p>This problem can be solved by using the so-called ‘zeros trick’ <span class="citation">(Spiegelhalter et al. 2003)</span>: the trick is to set the observed value for the i-th observation as zeros[i] = 0, which we have done with the first data step. We now need to specify that the observed value (0 for all observations) is distributed according to a Poisson probability function (i.e. one of the available pre-defined functions) with mean equal to phi; we can do this with the command zeros[i] ~ dpois(phi[i]). Note that the probability of obtaining zero from a Poisson distribution with mean equal to phi is exactly exp(-phi). Therefore, with this ‘zeros trick’ the software can assign the correct likelihood to each individual observation.</p>
-<p>Finally, the priors for all estimands are defined. For both variance parameters, we selected a uniform distribution from 0 to 100 [sigma.e ~ dunif(0, 100)]. For <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation (<span class="math inline">\(\sigma\)</span> = 103). So high a value of the standard deviation used a prior information means that, without looking at the experimental data, we had no idea about the values assumed by the unknown parameters. The priors for <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> were set with the command mu[i] ~ dnorm(0, 0.000001), which specifies the normal distribution using the mean (0) and the precision (0.000001), which is equal to <span class="math inline">\(1/\sigma^2\)</span>. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.</p>
+<p>This definition contains an initial data step, where we create a new variable (<code>zeros[i]</code>) by assigning a value of 0 to all observations. The reason why this data step is necessary will be clear later on.</p>
+<p>Successively, we have a model step, where we code the model we want to fit. This returns the expected value for each observation (<code>exp[i]</code>). Note the coding with double square brackets (<code>mu[Group[i]]</code>) that is used to mean that <code>mu</code> takes different values, depending on <code>Group[i]</code>.</p>
+<p>The next part codes the log-likelihood for the <span class="math inline">\(i\)</span>-th observation. The observations are assumed to be sorted, so that right-censored observations take the positions from 1 to N1, interval censored observations from N1 to N2, and left-censored observations from N2 to the end of the dataset. For each group, the negative log-likelihood is coded according to the Equations from 3 to 5 in our main paper and is stored in the variable <code>phi</code>.</p>
+<p>At this stage, we need to make JAGS use <code>phi</code> to calculate the likelihood for each observation. Such calculation would seem easy, as the likelihood is equal to <code>exp(-phi)</code>. Unfortunately, JAGS/BUGS can only calculate the likelihood by using a few pre-defined functions, none of which providing a simple direct solution.</p>
+<p>This problem can be solved by using the so-called ‘zeros trick’ <span class="citation">(Spiegelhalter et al. 2003)</span>: the trick is to set the observed value for the <span class="math inline">\(i\)</span>-th observation as <code>zeros[i] = 0</code>, which we have done in the first data step. We now need to specify that the observed value (0 for all observations) is distributed according to a Poisson probability function (i.e., one of the available pre-defined functions) with mean equal to phi; we can do this with the command <code>zeros[i] ~ dpois(phi[i])</code>. Note that the probability of obtaining zero from a Poisson distribution with mean equal to phi is exactly exp(-phi). Therefore, with this ‘zeros trick’ the software can assign the correct likelihood to each individual observation.</p>
+<p>Finally, the priors for all parameters are defined. For both variance parameters, we selected a uniform distribution from 0 to 100 (<code>sigma.e ~ dunif(0, 100)</code>). For <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation (<span class="math inline">\(\sigma\)</span> = 103). So high a value of the standard deviation used a prior information means that, without looking at the experimental data, we had no idea about the values assumed by the unknown parameters. The priors for <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> were set with the command <code>mu[i] ~ dnorm(0, 0.000001)</code>, which specifies the normal distribution using the mean (0) and the precision (0.000001), the precision being <span class="math inline">\(1/\sigma^2\)</span>. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.</p>
 <p>In the above model definition we also added some derived quantities, to be calculated from the estimated parameters, such as the difference between <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span>.</p>
 <hr />
 </div>
 <div id="model-fitting-in-r" class="section level1">
 <h1>Model fitting in R</h1>
-<p>Once the models has been coded and assigned to a string of text (“modelSpec”), before fitting the model, we have to</p>
+<p>Once the models has been coded and assigned to a string of text (<code>modelSpec</code>), before we start fitting the model, we have to</p>
 <ol style="list-style-type: decimal">
-<li>store the model definition to an external text file (“censoredMixedModel.txt”), using the function writeLines()</li>
-<li>load the dataset. We will reuse the dataset in the ungrouped form, as used for the survival model fit. This is available in the package agriCensData as starchGrainU</li>
-<li>sort the dataset in an ascending class order so that the individuals in the first diameter class (left-censored) begin the data set (from row 1 to row 639) and the individuals in the 5th diameter class (right-censored) end it (from row 2,131 to row 2,441)</li>
-<li>Define a few variables that are used in the model definition, such as N (the number of observations), N1 (the number of left-censored observations, i.e. 639) and N2 (the number of left-censored + interval censored observations, i.e. 2130).</li>
+<li>Store the model definition to an external text file (‘censoredMixedModel.txt’), using the function <code>writeLines()</code>.</li>
+<li>Load the dataset. We will reuse the dataset in the ungrouped form, as used for the survival model fit. This is available in the package <code>agriCensData</code> as <code>starchGrainU</code>.</li>
+<li>Sort the dataset in an ascending class order so that the individuals in the first diameter class (left-censored) begin the data set (from row 1 to row 639) and the individuals in the 5th diameter class (right-censored) end it (from row 2,131 to row 2,441).</li>
+<li>Define a few variables that are used in the model definition, such as <code>N</code> (the number of observations), <code>N1</code> (the number of left-censored observations, i.e. 639), and <code>N2</code> (the number of left-censored + interval censored observations, i.e. 2130).</li>
 </ol>
 <pre class="r"><code>library(agriCensData)
-writeLines(modelSpec, con=&quot;censoredMixedModel.txt&quot;)
+writeLines(modelSpec, con = &quot;censoredMixedModel.txt&quot;)
 data(starchGrainU)
 dataset_jags &lt;- starchGrainU[order(starchGrainU$Class), ]
-N1 &lt;- 639; N2 &lt;- 2130; N &lt;- 2441</code></pre>
-<p>Now we are ready to fit the model. To this aim we</p>
+N1 &lt;- 639
+N2 &lt;- 2130
+N &lt;- 2441</code></pre>
+<p>Now we are ready to fit the model. To this aim, we</p>
 <ol style="list-style-type: decimal">
-<li>load the rjags library</li>
-<li>create two lists: a list of all the data needed for the analysis (win.data) and a list of the initial values for the parameters to be estimated (init); and</li>
-<li>sending the model specification and the other data to JAGS, using the function jags.model(), provided by the package rjags; this function, in a few seconds, returns samples from the posterior distribution for all the estimated parameters (‘res3’).</li>
+<li>load the <code>rjags</code> library;</li>
+<li>create two lists: a list of all the data needed for the analysis (<code>win.data</code>) and a list of the initial values for the parameters to be estimated (<code>init</code>); and</li>
+<li>sending the model specification and the other data to JAGS, using the function <code>jags.model()</code>, provided by the package <code>rjags</code>; this function, in a few seconds, returns samples from the posterior distribution for all the estimated parameters (<code>res3</code>).</li>
 </ol>
-<p>Once the samples from the posterior have been obtained, we specify that 1000 samples should be discarded as ‘burn.in’. This samples might have been produced before reaching the convergence and, therefore, they might not come from the correct posterior distribution.</p>
+<p>Once the samples from the posterior have been obtained, we specify that 1000 samples should be discarded as <code>burn.in</code>. These samples might have been produced before reaching the convergence, and, therefore, they might not come from the correct posterior distribution.</p>
 <p>From the posterior, we obtain the mean and median as measures of central tendency, the standard deviation as a measure of uncertainty, and credible intervals, which are the Bayesian analog to confidence intervals.</p>
 <pre class="r"><code>library(rjags)
-win.data &lt;- list(low = dataset_jags$sizeLow, high=dataset_jags$sizeUp, 
-                 N1=N1, N2=N2, N=N, Group=factor(dataset_jags$Group),
-                 Photo=factor(dataset_jags$Photo))
+win.data &lt;- list(low = dataset_jags$sizeLow, high = dataset_jags$sizeUp, 
+                 N1 = N1, N2 = N2, N = N, 
+                 Group = factor(dataset_jags$Group),
+                 Photo = factor(dataset_jags$Photo))
 
-init &lt;- list (mu = c(7.3, 8.7), sigma.e = 1.7, sigma.P=0.5)
+init &lt;- list (mu = c(7.3, 8.7), sigma.e = 1.7, sigma.P = 0.5)
 mcmc &lt;- jags.model(&quot;censoredMixedModel.txt&quot;,data = win.data, inits = init, 
                    n.chains = 4, n.adapt = 100)</code></pre>
 <pre><code>## Compiling data graph
@@ -539,7 +542,7 @@ mcmc &lt;- jags.model(&quot;censoredMixedModel.txt&quot;,data = win.data, inits 
   |                                                        
   |++++++++++++++++++++++++++++++++++++++++++++++++++| 100%</code></pre>
 <pre class="r"><code>params &lt;- c(&quot;mu&quot;, &quot;sigma.e&quot;, &quot;sigma.P&quot;, &quot;sigma2p&quot;, &quot;sigma2e&quot;, &quot;diff&quot;)
-res3 &lt;- coda.samples(mcmc, params, n.iter=10000)</code></pre>
+res3 &lt;- coda.samples(mcmc, params, n.iter = 10000)</code></pre>
 <pre><code>## 
   |                                                        
   |                                                  |   0%
@@ -644,7 +647,7 @@ res3 &lt;- coda.samples(mcmc, params, n.iter=10000)</code></pre>
   |                                                        
   |**************************************************| 100%</code></pre>
 <pre class="r"><code>burn.in &lt;- 1000
-summary(window(res3, start=burn.in))</code></pre>
+summary(window(res3, start = burn.in))</code></pre>
 <pre><code>## 
 ## Iterations = 1000:10100
 ## Thinning interval = 1 
@@ -654,26 +657,26 @@ summary(window(res3, start=burn.in))</code></pre>
 ## 1. Empirical mean and standard deviation for each variable,
 ##    plus standard error of the mean:
 ## 
-##            Mean     SD  Naive SE Time-series SE
-## diff    -1.4797 0.4385 0.0022984      0.0060028
-## mu[1]    7.2226 0.3219 0.0016871      0.0042741
-## mu[2]    8.7023 0.3059 0.0016035      0.0043967
-## sigma.P  0.7694 0.2640 0.0013836      0.0068681
-## sigma.e  6.6034 0.1386 0.0007267      0.0009359
-## sigma2e 43.6236 1.8333 0.0096086      0.0124171
-## sigma2p  0.6616 0.4395 0.0023032      0.0087715
+##            Mean     SD Naive SE Time-series SE
+## diff    -1.4840 0.4432 0.002323       0.006179
+## mu[1]    7.2174 0.3196 0.001675       0.004290
+## mu[2]    8.7015 0.3014 0.001580       0.004082
+## sigma.P  0.7610 0.2646 0.001387       0.007100
+## sigma.e  6.6052 0.1366 0.000716       0.000913
+## sigma2e 43.6472 1.8071 0.009471       0.012091
+## sigma2p  0.6492 0.4309 0.002258       0.009243
 ## 
 ## 2. Quantiles for each variable:
 ## 
 ##             2.5%     25%     50%     75%   97.5%
-## diff    -2.36711 -1.7622 -1.4744 -1.1940 -0.6225
-## mu[1]    6.57341  7.0151  7.2270  7.4352  7.8480
-## mu[2]    8.10517  8.5074  8.7004  8.8966  9.3210
-## sigma.P  0.25858  0.5980  0.7602  0.9322  1.3189
-## sigma.e  6.33838  6.5089  6.6012  6.6950  6.8809
-## sigma2e 40.17503 42.3652 43.5762 44.8224 47.3471
-## sigma2p  0.06686  0.3576  0.5778  0.8691  1.7394</code></pre>
-<p>We can see that the the expected difference between the producers is equal to -1.477 and there is a 95% posterior probability that the true difference is between -2.3763 and -0.6164 and therefore it is different from 0 (please note that other runs of the model may bring to slightly different results). It is also interesting to note that the random effect for the photos has a variance component of 0.66, and its credible interval does not contain the 0.</p>
+## diff    -2.37801 -1.7693 -1.4736 -1.1877 -0.6274
+## mu[1]    6.57731  7.0068  7.2227  7.4300  7.8350
+## mu[2]    8.11116  8.5051  8.7010  8.8958  9.3076
+## sigma.P  0.22763  0.5914  0.7536  0.9247  1.3092
+## sigma.e  6.34807  6.5106  6.6016  6.6961  6.8807
+## sigma2e 40.29801 42.3882 43.5811 44.8372 47.3434
+## sigma2p  0.05182  0.3497  0.5679  0.8551  1.7139</code></pre>
+<p>We can see that the the expected difference between the producers is equal to -1.477 and there is a 95% posterior probability that the true difference is between -2.3763 and -0.6164, and thus it is different from 0 (please note that other runs of the model may bring to slightly different results). The random effect for the photos has a variance component of 0.66, and its credible interval does not contain the 0.</p>
 <hr />
 </div>
 <div id="references" class="section level1 unnumbered">
