@@ -1,7 +1,7 @@
 
 data{
 for (i in 1:N) {
-zeros[i] <- 0
+  zeros[i] <- 0
 }}
 
 model{

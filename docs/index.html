@@ -332,13 +332,13 @@ Department of Botany, Warsaw University of Life Sciences - SGGW, Nowoursynowska 
 <li>counts of organisms which are recorded as higher than a certain threshold value</li>
 <li>visual measurements on a conventional rating scale (e.g. when scoring pesticide efficacy/phytotoxicity, leaf damage, plant growth, disease severity…)</li>
 </ol>
-<p>Unfortunately, when dealing with these data, agricultural researchers usually do not choose the appropriate methods of data analysis, but they keep on using the conventional tools, such as ANOVA and regression, which are either wrong or inefficient.</p>
+<p>Unfortunately, when dealing with these data, agricultural researchers usually do not choose appropriate methods of data analysis, but they keep on using conventional tools, such as ANOVA and regression, which are either wrong or inefficient.</p>
 <p>In the paper we give three examples and try to show why it is important to use methods that fully respect the manner in which the data were collected. We also give some software tips to show the real life of analysing censored data, hoping that it will make censored data methods slightly more popular among biologists and agricultural scientists. However, the reviewers suggested we needed some extra space to take the readers hand-by-hand and guide them through the process of data analysis with censored data. Thankful for this suggestion, we offer this tour.</p>
-<p>This webpage aims at providing fully commented R code and the datasets to reproduce all the analyses and results in the main paper. We also give some extra hints, to open up other possibilities, which were not considered in the main paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively. You can use the top menu to get access to the different sections of this site.</p>
+<p>This webpage aims to provide the commented R code and the datasets to reproduce all the analyses and results described in the main paper (<em>Literature reference, when available</em>). We also give some extra hints, to open up other possibilities, not considered in the paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively.</p>
 </div>
 <div id="the-package" class="section level1">
 <h1>The package</h1>
-<p>This web-site is associated to an R package that contains all the datasets. Please, install this package from gitHub. If you have not done this before, you also need to install the <em>devtools</em> package. The code is as follows:</p>
+<p>This web-site is associated to the R package <code>agriCensData</code>, which contains all the datasets. You can install it from gitHub. You also need to have installed the <em>devtools</em> package. The code is as follows:</p>
 <pre class="r"><code># install.packages(&quot;devtools&quot;)
 library(devtools)
 install_github(&quot;OnofriAndreaPG/agriCensData&quot;)</code></pre>

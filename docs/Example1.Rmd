@@ -22,9 +22,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The dataset
 
-The dataset refers to a field experiment to compare weed control ability of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, following the Braun-Blanquet method. The limits of the classes are shown as "L" (lower limit) and "U" (upper limit). The "midPoint" represents the center of each class. Each dataset record represent one field plot.
+The dataset refers to a field experiment aiming to compare the weed control abilities of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, using the Braun-Blanquet method. The limits of the classes are shown as `L` (lower limit) and `U` (upper limit). The `midPoint` represents the centre of each class. Each dataset record represents one field plot.
 
-First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html) NOT ENOUGH TO GIVE JUST REFERENCE TO INDEX.HTML?). Together with this package, we also load all the other necessary packages.
+First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html). Together with this package, we also load all the other necessary packages.
 
 
 ```{r message=F}
@@ -39,7 +39,7 @@ head(BBsurvey)
 
 #A traditional ANOVA fit
 
-Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this is a real number, we may fit a traditional ANOVA model. Means may be found by using the emmeans package [@lenth2016_LeastSquaresMeansPackage]. Although we have not done this in the main paper, multiple comparison testing may be performed by using the same package.
+Although we have actually collected the data by assigning each plot to one cover-abundance class, we may be tempted to use the mid-point of that class as the dependent variable. As this midpoint is a real number, we may fit a traditional ANOVA model. We can find the corresponding means using the emmeans package [@lenth2016_LeastSquaresMeansPackage]. In the paper, we did not conduct pair-wise comparisons. If you want to do this anyway, you can do so using the same package,as shown below.
 
 
 ```{r}
@@ -49,26 +49,28 @@ means
 CLD(means, Letter = LETTERS, sort = F)
 ```
 
-By using the traditional ANOVA, it is clear that we have circumvented the problem of censoring, by pretending that the observations are more reliable than they actually are.
+
+Using this approach (the traditional ANOVA), we have circumvented the problem of censoring by *pretending* that the observations are more reliable than they actually are.
 
 ---
 
 #A 'survival' model
 
-The body of methods dealing with censored data is usually known as survival analysis, as data relating to the survival of individuals are very often censored. Obviously, we can use survival analysis with all types of censored data, also when they have nothing to do with the survival of an individual.
+The body of methods dealing with censored data is usually known as survival analysis, as data relating to the survival of individuals are very often censored. Obviously, we can use survival analysis with all types of censored data, also when they have nothing to do with the survival of individuals.
 
-In order to fit a 'survival' model, we need to load the survival package [@therneau_package_1999] and use the 'survereg()' function within this package. The coding is very similar to that used by the function 'lm()'; the only difference is that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner with which the data were harvested.
+To fit a 'survival' model, we need to load the survival package [@therneau_package_1999] and use the `survereg()` function from this package. Its arguments are similar to those used by the function `lm()`, with the only difference  that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner the data were harvested with.
 
 
 ```{r}
 library(survival)
-mod.surv <- survreg(Surv(L, U, type = "interval2") ~ Herbicide, 
+mod.surv <- survreg(
+  Surv(L, U, type = "interval2") ~ Herbicide, 
   dist = "gaussian", data = BBsurvey)
 means.surv <- emmeans(mod.surv, ~ Herbicide) 
 CLD(means.surv, Letters = LETTERS, sort = F)
 ```
 
-As we note in the main paper (*Literature reference, when available*), with survival analysis the means are estimated with higher precision, so we can also exclude herbicide B from the group of those with highest weed control ability.
+As we note in the main paper (*Literature reference, when available*), survival analysis estimates means with higher precision than the traditional ANOVA.
 
 ---
 

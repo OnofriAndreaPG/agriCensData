@@ -321,9 +321,9 @@ div.tocify {
 <hr />
 <div id="the-dataset" class="section level1">
 <h1>The dataset</h1>
-<p>This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers, collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (&lt;4, 4-8, 8-12, 12-16, &gt;16 <span class="math inline">\(\mu m\)</span>). For each producer, the diameters were measured from twelve photos taken with a microscope.</p>
-<p>The original dataset is in a grouped form; one record represents a photo (12 photos per each producer) and shows the number of starch grains in each of the 5 diameter classes. The producer is indicated in the ‘Group’ column. The dataset in this form is available in the ‘agriCensData’ package, which can be installed from gitHub (see <a href="https://onofriandreapg.github.io/agriCensData/index.html">here</a>)</p>
-<pre class="r"><code>library(reshape)
+<p>This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (&lt;4, [4-8[, [8-12[, [12-16[, <span class="math inline">\(\ge16\)</span> <span class="math inline">\(\mu m\)</span>). For each producer, the diameters were measured from twelve photos taken with a microscope.</p>
+<p>The original dataset is in a grouped form; one record represents a photo (12 photos per each producer) and shows the number of starch grains in each of the 5 diameter classes. The producer is indicated in the <code>Group</code> column. The dataset in this form is available in the <code>agriCensData</code> package, which can be installed from gitHub (see <a href="https://onofriandreapg.github.io/agriCensData/index.html">here</a>).</p>
+<pre class="r"><code>library(tidyr)
 library(nnet)
 library(emmeans)
 library(survival)
@@ -344,13 +344,14 @@ head(starchGrain, 10)</code></pre>
 ## 10    P1    10 26 27 27 14  8</code></pre>
 <hr />
 </div>
-<div id="un-onordered-multinomial-logit-model" class="section level1">
-<h1>Un onordered multinomial logit model</h1>
+<div id="an-onordered-multinomial-logit-model" class="section level1">
+<h1>An onordered multinomial logit model</h1>
 <p>The grouped nature of the data suggests we should analyse counts. For each photo, all starch grains should be included in one and only one class, so that the proportions of seeds in the five classes should sum up to one.</p>
-<p>Therefore, it is reasonable to think about multinomial logit model, where we treat the classes as nominal categories. In simple terms, a multinomial logit model considers the proportions of grains in each class and how these proportions are affected by the producer. Since this analysis does not require any assumptions about the real diameter size and its distribution within the population, the method is non-parametric.</p>
-<p>In order to fit a multinomial logit model in R, it is useful to reorganise the above dataset in an ungrouped form, so that we have one line for each starch grain (2441 lines), containing all its information, i.e. the photo where it was counted, the class to which it was assigned, and the limits of the class (sizeLow and sizeUp). This reordering can be done by using the facilities provided in the reshape package <span class="citation">(Wickham 2007)</span></p>
-<pre class="r"><code>moltenData &lt;- melt(starchGrain, id = c(&quot;Group&quot;,&quot;Photo&quot;))
-datasetR &lt;- moltenData[rep(seq_len(nrow(moltenData)), moltenData$value), ][, 1:3]
+<p>Therefore, it’s reasonable to consider a multinomial logit model, which treats the classes as nominal categories. In simple terms, a multinomial logit model considers the proportions of grains in each class and how these proportions are affected by the producer. Since such an analysis does not require any assumptions about the real diameter size and its distribution within the population, the method is non-parametric.</p>
+<p>In order to fit a multinomial logit model in R, it is useful to reorganise the above dataset into an ungrouped form, so that we have one line for each starch grain (so, 2441 lines), containing all its information: the photo where it was counted, the class to which it was assigned, and the limits of the class (<code>sizeLow</code> and <code>sizeUp</code>). This reordering can be done using the facilities provided in the <code>tidyr</code> package <span class="citation">(Wickham and Henry 2018)</span>.</p>
+<pre class="r"><code>moltenData &lt;- gather(starchGrain, variable, value, -Group, -Photo)
+datasetR &lt;- moltenData[rep(seq_len(nrow(moltenData)), 
+                           moltenData$value), ][, 1:3]
 names(datasetR)[3] &lt;- &quot;Class&quot;
 row.names(datasetR) &lt;- 1:2441
 rm(moltenData)
@@ -360,12 +361,16 @@ datasetR$sizeLow = with(datasetR,
                         ifelse(Class == &quot;c1&quot;, NA,
                                ifelse(Class == &quot;c2&quot;, 4,
                                       ifelse(Class == &quot;c3&quot;, 8, 
-                                             ifelse(Class == &quot;c4&quot;, 12, 16)))) ) 
+                                             ifelse(Class == &quot;c4&quot;, 12, 16))))
+                        )
+
 datasetR$sizeUp = with(datasetR, 
                        ifelse(Class == &quot;c1&quot;, 4,
                               ifelse(Class == &quot;c2&quot;, 8,
                                      ifelse(Class == &quot;c3&quot;, 12, 
-                                            ifelse(Class == &quot;c4&quot;, 16, NA)))) )
+                                            ifelse(Class == &quot;c4&quot;, 16, NA))))
+                       )
+
 head(datasetR, 10)</code></pre>
 <pre><code>##    Group Photo Class sizeLow sizeUp
 ## 1     P1     1    c1      NA      4
@@ -378,14 +383,14 @@ head(datasetR, 10)</code></pre>
 ## 8     P1     1    c1      NA      4
 ## 9     P1     1    c1      NA      4
 ## 10    P1     1    c1      NA      4</code></pre>
-<p>Now we can fit a multinomial model, by using the ‘multinom()’ function in the ‘nnet’ package <span class="citation">(Venables et al. 2002)</span>. The proportions of grains in the five classes for the two producers can be retreived by the multinomial fit by using the usual ‘emmeans()’ function.</p>
+<p>Now we can fit a multinomial model, using the <code>multinom()</code> function in the <code>nnet</code> package <span class="citation">(Venables et al. 2002)</span>. The proportions of grains in the five classes for the two producers can be retreived by the multinomial fit with the <code>emmeans()</code> function, which we used in the previous examples.</p>
 <pre class="r"><code>mmod &lt;- multinom(Class ~ Group, datasetR)</code></pre>
 <pre><code>## # weights:  15 (8 variable)
 ## initial  value 3928.637944 
 ## iter  10 value 3802.578106
 ## final  value 3799.566316 
 ## converged</code></pre>
-<p>In order to test the overall significance of the ‘producer’ effect, we can fit a null model, without the producer effect and compare it with the previous model, by using a likelihood ratio test.</p>
+<p>In order to test the overall significance of the producer effect, we can fit a null model (which does not include this effect) and compare it with the previous model, using a likelihood ratio test.</p>
 <pre class="r"><code>mmodNull &lt;- multinom(Class ~ 1, datasetR)</code></pre>
 <pre><code>## # weights:  10 (4 variable)
 ## initial  value 3928.637944 
@@ -398,7 +403,7 @@ head(datasetR, 10)</code></pre>
 ##   Model Resid. df Resid. Dev   Test    Df LR stat.      Pr(Chi)
 ## 1     1      9760   7651.197                                   
 ## 2 Group      9756   7599.133 1 vs 2     4 52.06482 1.337066e-10</code></pre>
-<p>The difference between producers is highly significant (P = 1.34e-10). Therefore, we can try to compare the proportions in each class for the two producers. This can be easily done by using the usual ‘emmeans()’ function. The same function can be used to perform multiple comparison testing, although we have not done this in our main paper.</p>
+<p>The difference between the producers is significant (<em>P</em> = 1.34e-10). Therefore, we can try to compare the proportions in each class for the two producers. We can do it with the <code>emmeans()</code> function, which we can also use to test the difference between the producers (here, for each class).</p>
 <pre class="r"><code>props &lt;- emmeans(mmod, ~ Group | Class)
 props</code></pre>
 <pre><code>## Class = c1:
@@ -456,18 +461,18 @@ props</code></pre>
 ## Confidence level used: 0.95 
 ## significance level used: alpha = 0.05</code></pre>
 <p>We see that the producer P1 grew tubers with higher proportions of starch grains in the 5th class and lower in the 2nd.</p>
-<p>This unordered multinomial fit is not wrong, but it is sub-optimal for several reasons:</p>
+<p>Although not wrong, this unordered multinomial fit is sub-optimal for several reasons:</p>
 <ol style="list-style-type: decimal">
-<li>It is not parsimonious. Indeed, we needed to estimate eight parameters (four proportions per producer since the fifth one follows from those four estimated). As we will show later, it is possible to fit a meaningful model also with fewer parameters.</li>
-<li>Indirectly, we demonstrated that the second producer has starch grains of smaller size, although we could not calculate several important statistics, such as the mean diameters for the two producers or the diameter variance. This is because we treated the classes as nominal, neglecting that they have natural ordering and distances.</li>
-<li>We neglected that starch grains are clustered within photos, which means that they are stochastically dependent.</li>
+<li>It is not parsimonious. Indeed, we needed to estimate eight parameters (four proportions per producer, since the fifth one follows from those four estimated). As we will show later, it is possible to fit a meaningful model also with fewer parameters.</li>
+<li>Indirectly, we demonstrated that the second producer had starch grains of smaller size, although we could not calculate several important statistics, such as the mean diameters for the two producers or the diameter variance. This is because we treated the classes as nominal, neglecting that they had natural ordering and distances.</li>
+<li>We neglected that starch grains were clustered within photos, meaning that they were stochastically dependent.</li>
 </ol>
 <hr />
 </div>
 <div id="a-survival-model-fit" class="section level1">
 <h1>A survival model fit</h1>
-<p>We should recognise that, for each starch grain, we indeed measured the diameter, although our precision was rather low. Therefore, we did not manage to obtain a value, but instead we obtained an interval. In order to fully respect our data collection process, we should model such intervals and not only the corresponding counts.</p>
-<p>We can do this by using a ‘survival’ model, assuming that the distribution of starch grain diameters in the population is Gaussian. As in the other examples, we can use the ‘survreg’ function in the survival package <span class="citation">(Therneau 1999)</span>.</p>
+<p>We should recognise that, for each starch grain, we indeed measured the diameter, though with low precision. So, we failed to obtain a value, but instead we obtained an interval. To take into accout the data collection process, we should model such intervals instead of the corresponding counts.</p>
+<p>We can do this by using a survival model, assuming that the distribution of starch grain diameters in the population is Gaussian. As in the other examples, we can use the <code>survreg</code> function in the survival package <span class="citation">(Therneau 1999)</span>.</p>
 <pre class="r"><code>surv.reg1 &lt;- survreg(Surv(sizeLow, sizeUp, type = &quot;interval2&quot;) ~ Group,
                      dist = &quot;gaussian&quot;, data = datasetR)
 summary(surv.reg1)</code></pre>
@@ -487,9 +492,9 @@ summary(surv.reg1)</code></pre>
 ##  Chisq= 21.57 on 1 degrees of freedom, p= 3.4e-06 
 ## Number of Newton-Raphson Iterations: 3 
 ## n= 2441</code></pre>
-<p>We now see that the producer P1 had starch grains with an average diameter of 7.34 <span class="math inline">\(\mu m\)</span> and the difference between P1 and P2 was 1.33 <span class="math inline">\(\mu m\)</span>, which was significantly different from 0 (p = 3.3e-06).</p>
-<p>We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected.</p>
-<p>However, do note that our survival model is still not fully OK, because it does not respect the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.</p>
+<p>We now see that the producer P1 had starch grains with an average diameter of 7.34 <span class="math inline">\(\mu m\)</span>, and that the difference between P1 and P2 was 1.33 <span class="math inline">\(\mu m\)</span>, which was significantly different from 0 (<em>P</em> = 3.3e-06).</p>
+<p>We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected. We discuss these aspects of the analysis in our paper (<em>Literature reference, when available</em>).</p>
+<p>Do note, however, that our survival model is still not fully OK, because it diregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.</p>
 <hr />
 </div>
 <div id="references" class="section level1 unnumbered">
@@ -501,8 +506,8 @@ summary(surv.reg1)</code></pre>
 <div id="ref-venables2002_Modernappliedstatisticsa">
 <p><span style="font-variant: small-caps;">Venables, WN, BD Ripley, WN Venables</span> (2002) <em>Modern applied statistics with S</em>4th ed. Springer, New York</p>
 </div>
-<div id="ref-wickham2007_ReshapingDatareshape">
-<p><span style="font-variant: small-caps;">Wickham, H</span> (2007) Reshaping Data with the reshape Package. <em>Journal of Statistical Software</em> <strong>21</strong></p>
+<div id="ref-tidyr">
+<p><span style="font-variant: small-caps;">Wickham, H, L Henry</span> (2018) <em>Tidyr: Easily tidy data with ’spread()’ and ’gather()’ functions</em></p>
 </div>
 </div>
 </div>
