@@ -1,13 +1,9 @@
 ---
 title: "Example 1. Analysing visually recorded cover-abundance data"
 author: "A. Onofri, H-P. Piepho and M. Kozak"
+author: "Andrea Onofri, Hans-Peter Piepho and Marcin Kozak"
 csl: weed-research.csl
 output:
-  word_document:
-    keep_md: yes
-    toc: yes
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float:
@@ -29,7 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The dataset refers to a field experiment aiming to compare the weed control abilities of nine post-emergence herbicides against *Sorghum halepense* in maize. Three weeks after the treatment, the cover-abundance of *S. halepense* was visually recorded in six classes, using the Braun-Blanquet method. The limits of the classes are shown as `L` (lower limit) and `U` (upper limit). The `midPoint` represents the centre of each class. Each dataset record represents one field plot.
 
-First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html). Together with this package, we also load all the other necessary packages.
+First of all, we need to read the data into R. As the dataset is contained in the companion package 'agriCensData', we need to load this package first, assuming that it has been already installed in the system (as shown [here](https://onofriandreapg.github.io/agriCensData/index.html)). Together with this package, we also load all the other necessary packages.
 
 
 ```{r message=F}

@@ -1,17 +1,13 @@
 ---
 title: "Example 3. Potato starch grains assessed in size categories"
-author: "A. Onofri, H-P. Piepho and M. Kozak"
+author: "Andrea Onofri, Hans-Peter Piepho and Marcin Kozak"
 csl: weed-research.csl
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float:
       collapsed: no
       smooth_scroll: no
-  word_document:
-    toc: yes
 bibliography: GroupedData.bib
 ---
 
@@ -26,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The dataset
 
-This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes (<4, [4-8[, [8-12[, [12-16[, $\ge16$ $\mu m$). For each producer, the diameters were measured from twelve photos taken with a microscope.
+This dataset refers to an experiment which aimed to compare diameters of starch grains from tubers of two potato producers. Starch grains were sampled from tubers collected from the production fields of the producers. The dataset shows the counts of starch grains assigned to one of five diameter classes ($<4$, $[4-8[$, $[8-12[$, $[12-16[$, $\ge16$ $\mu m$). For each producer, the diameters were measured from twelve photos taken with a microscope.
 
 The original dataset is in a grouped form; one record represents a photo (12 photos per each producer) and shows the number of starch grains in each of the 5 diameter classes. The producer is indicated in the `Group` column. The dataset in this form is available in the `agriCensData` package, which can be installed from gitHub (see [here](https://onofriandreapg.github.io/agriCensData/index.html)).
 
