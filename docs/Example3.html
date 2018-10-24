@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="A. Onofri, H-P. Piepho and Marcin Kozak" />
+<meta name="author" content="A. Onofri, H-P. Piepho and M. Kozak" />
 
 
 <title>Example 3. Potato starch grains assessed in size categories</title>
@@ -313,7 +313,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Example 3. Potato starch grains assessed in size categories</h1>
-<h4 class="author"><em>A. Onofri, H-P. Piepho and Marcin Kozak</em></h4>
+<h4 class="author"><em>A. Onofri, H-P. Piepho and M. Kozak</em></h4>
 
 </div>
 
@@ -344,8 +344,8 @@ head(starchGrain, 10)</code></pre>
 ## 10    P1    10 26 27 27 14  8</code></pre>
 <hr />
 </div>
-<div id="an-onordered-multinomial-logit-model" class="section level1">
-<h1>An onordered multinomial logit model</h1>
+<div id="an-unordered-multinomial-logit-model" class="section level1">
+<h1>An unordered multinomial logit model</h1>
 <p>The grouped nature of the data suggests we should analyse counts. For each photo, all starch grains should be included in one and only one class, so that the proportions of seeds in the five classes should sum up to one.</p>
 <p>Therefore, it’s reasonable to consider a multinomial logit model, which treats the classes as nominal categories. In simple terms, a multinomial logit model considers the proportions of grains in each class and how these proportions are affected by the producer. Since such an analysis does not require any assumptions about the real diameter size and its distribution within the population, the method is non-parametric.</p>
 <p>In order to fit a multinomial logit model in R, it is useful to reorganise the above dataset into an ungrouped form, so that we have one line for each starch grain (so, 2441 lines), containing all its information: the photo where it was counted, the class to which it was assigned, and the limits of the class (<code>sizeLow</code> and <code>sizeUp</code>). This reordering can be done using the facilities provided in the <code>tidyr</code> package <span class="citation">(Wickham and Henry 2018)</span>.</p>
@@ -494,7 +494,7 @@ summary(surv.reg1)</code></pre>
 ## n= 2441</code></pre>
 <p>We now see that the producer P1 had starch grains with an average diameter of 7.34 <span class="math inline">\(\mu m\)</span>, and that the difference between P1 and P2 was 1.33 <span class="math inline">\(\mu m\)</span>, which was significantly different from 0 (<em>P</em> = 3.3e-06).</p>
 <p>We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected. We discuss these aspects of the analysis in our paper (<em>Literature reference, when available</em>).</p>
-<p>Do note, however, that our survival model is still not fully OK, because it diregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.</p>
+<p>Do note, however, that our survival model is still not fully OK, because it disregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.</p>
 <hr />
 </div>
 <div id="references" class="section level1 unnumbered">

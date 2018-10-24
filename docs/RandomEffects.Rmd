@@ -1,14 +1,16 @@
 ---
-title: 'Example 3 continued. Fitting a mixed effect survival model'
-author: "A. Onofri, H-P. Piepho and Marcin Kozak"
-bibliography: GroupedData.bib
+title: "Example 3 continued. Fitting a mixed effect survival model"
+author: "A. Onofri, H-P. Piepho and M. Kozak"
 csl: weed-research.csl
-output: 
+output:
+  word_document:
+    toc: yes
   html_document:
     toc: yes
-    toc_float: 
-     collapsed: false
-     smooth_scroll: false
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+bibliography: GroupedData.bib
 ---
 
 
@@ -104,7 +106,7 @@ At this stage, we need to make JAGS use `phi` to calculate the likelihood for ea
 
 This problem can be solved by using the so-called 'zeros trick' [@spiegelhalter2003_WinBUGSusermanual]: the trick is to set the observed value for the $i$-th observation as `zeros[i] = 0`, which we have done in the first (data) step. We now need to specify that the observed value (0 for all observations) is distributed according to a Poisson probability function (i.e., one of the available pre-defined functions) with mean equal to phi; we can do this with the command `zeros[i] ~ dpois(phi[i])`. Note that the probability of obtaining zero from a Poisson distribution with mean equal to phi is exactly $e^{-phi}$. sO, with this "zeros trick" the software can assign the correct likelihood to each individual observation.
 
-Finally, we have to define the priors for all the parameters. For both variance parameters, we selected a uniform distribution from 0 to 100 (`sigma.e ~ dunif(0, 100)`). For $\mu_1$ and $\mu_2$ our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation ($\sigma$ = 103). So high an SD value used as a prior information means that, without looking at the experimental data, we had no idea about the values of these unknown parameters. The priors for $\mu_1$ and $\mu_2$ were set with the command `mu[i] ~ dnorm(0, 0.000001)`, which specifies the normal distribution using the mean of 0 and the precision of 0.000001, the precision being $1/\sigma^2$. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.
+Finally, we have to define the priors for all the parameters. For both variance parameters, we selected a uniform distribution from 0 to 100 (`sigma.e ~ dunif(0, 100)`). For $\mu_1$ and $\mu_2$ our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation ($\sigma = 10^3$). So high an SD value used as a prior information means that, without looking at the experimental data, we had no idea about the values of these unknown parameters. The priors for $\mu_1$ and $\mu_2$ were set with the command `mu[i] ~ dnorm(0, 0.000001)`, which specifies the normal distribution using the mean of 0 and the precision of 0.000001, the precision being $1/\sigma^2$. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.
 
 In the above model definition, we also added some derived quantities, to be calculated from the estimated parameters, such as the difference between $\mu_1$ and $\mu_2$.
 
@@ -139,7 +141,7 @@ Once the samples from the posterior have been obtained, we specify that 1000 sam
 
 From the posterior, we obtain the mean and median as measures of central tendency, the standard deviation as a measure of uncertainty, and credible intervals, which are the Bayesian analog to confidence intervals.
 
-```{r message=F, results="none"}
+```{r message=F, results="hide"}
 library(rjags)
 win.data <- list(low = dataset_jags$sizeLow, 
                  high = dataset_jags$sizeUp, 

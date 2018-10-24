@@ -1,14 +1,18 @@
 ---
-title: 'Example 3. Potato starch grains assessed in size categories'
-author: "A. Onofri, H-P. Piepho and Marcin Kozak"
-bibliography: GroupedData.bib
+title: "Example 3. Potato starch grains assessed in size categories"
+author: "A. Onofri, H-P. Piepho and M. Kozak"
 csl: weed-research.csl
-output: 
+output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
-    toc_float: 
-     collapsed: false
-     smooth_scroll: false
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  word_document:
+    toc: yes
+bibliography: GroupedData.bib
 ---
 
 
@@ -39,7 +43,7 @@ head(starchGrain, 10)
 
 ---
 
-#An onordered multinomial logit model
+#An unordered multinomial logit model
 
 The grouped nature of the data suggests we should analyse counts. For each photo, all starch grains should be included in one and only one class, so that the proportions of seeds in the five classes should sum up to one.
 
@@ -121,7 +125,7 @@ We now see that the producer P1 had starch grains with an average diameter of 7.
 
 We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected. We discuss these aspects of the analysis in our paper (*Literature reference, when available*). 
 
-Do note, however, that our survival model is still not fully OK, because it diregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.
+Do note, however, that our survival model is still not fully OK, because it disregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.
 
 ---
 

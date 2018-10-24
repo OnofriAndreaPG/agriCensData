@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="A. Onofri, H-P. Piepho and Marcin Kozak" />
+<meta name="author" content="A. Onofri, H-P. Piepho and M. Kozak" />
 
 
 <title>Example 1. Analysing visually recorded cover-abundance data</title>
@@ -313,7 +313,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Example 1. Analysing visually recorded cover-abundance data</h1>
-<h4 class="author"><em>A. Onofri, H-P. Piepho and Marcin Kozak</em></h4>
+<h4 class="author"><em>A. Onofri, H-P. Piepho and M. Kozak</em></h4>
 
 </div>
 
@@ -374,9 +374,9 @@ means</code></pre>
 <hr />
 </div>
 <div id="a-survival-model" class="section level1">
-<h1>A ‘survival’ model</h1>
+<h1>A survival model</h1>
 <p>The body of methods dealing with censored data is usually known as survival analysis, as data relating to the survival of individuals are very often censored. Obviously, we can use survival analysis with all types of censored data, also when they have nothing to do with the survival of individuals.</p>
-<p>To fit a ‘survival’ model, we need to load the survival package <span class="citation">(Therneau 1999)</span> and use the <code>survereg()</code> function from this package. Its arguments are similar to those used by the function <code>lm()</code>, with the only difference that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner the data were harvested with.</p>
+<p>To fit a survival model, we need to load the survival package <span class="citation">(Therneau 1999)</span> and use the <code>survereg()</code> function from this package. Its arguments are similar to those used by the function <code>lm()</code>, with the only difference that the former method uses interval limits as the dependent variable, with no need for imputation. We argue that this is much more respectuful of the manner the data were harvested with.</p>
 <pre class="r"><code>library(survival)
 mod.surv &lt;- survreg(
   Surv(L, U, type = &quot;interval2&quot;) ~ Herbicide, 

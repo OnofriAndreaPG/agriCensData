@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="A. Onofri, H-P. Piepho and Marcin Kozak" />
+<meta name="author" content="A. Onofri, H-P. Piepho and M. Kozak" />
 
 
 <title>Example 3 continued. Fitting a mixed effect survival model</title>
@@ -313,7 +313,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Example 3 continued. Fitting a mixed effect survival model</h1>
-<h4 class="author"><em>A. Onofri, H-P. Piepho and Marcin Kozak</em></h4>
+<h4 class="author"><em>A. Onofri, H-P. Piepho and M. Kozak</em></h4>
 
 </div>
 
@@ -386,7 +386,7 @@ for(i in 1:2){
 <p>The next part codes the log-likelihood for the <span class="math inline">\(i\)</span>-th observation. The observations are assumed to be sorted, so that right-censored observations take the positions from 1 to N1, interval-censored observations take the positions from N1 to N2, and left-censored observations take the postions from N2 to the end of the dataset. For each group, the negative log-likelihood is coded according to the Equations from 3 to 5 in our paper and is stored in the variable <code>phi</code>.</p>
 <p>At this stage, we need to make JAGS use <code>phi</code> to calculate the likelihood for each observation. Such calculation might seem easy, since the likelihood is equal to <code>exp(-phi)</code>. Unfortunately, JAGS/BUGS can only calculate the likelihood using a few pre-defined functions, none of which providing a simple direct solution.</p>
 <p>This problem can be solved by using the so-called ‘zeros trick’ <span class="citation">(Spiegelhalter et al. 2003)</span>: the trick is to set the observed value for the <span class="math inline">\(i\)</span>-th observation as <code>zeros[i] = 0</code>, which we have done in the first (data) step. We now need to specify that the observed value (0 for all observations) is distributed according to a Poisson probability function (i.e., one of the available pre-defined functions) with mean equal to phi; we can do this with the command <code>zeros[i] ~ dpois(phi[i])</code>. Note that the probability of obtaining zero from a Poisson distribution with mean equal to phi is exactly <span class="math inline">\(e^{-phi}\)</span>. sO, with this “zeros trick” the software can assign the correct likelihood to each individual observation.</p>
-<p>Finally, we have to define the priors for all the parameters. For both variance parameters, we selected a uniform distribution from 0 to 100 (<code>sigma.e ~ dunif(0, 100)</code>). For <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation (<span class="math inline">\(\sigma\)</span> = 103). So high an SD value used as a prior information means that, without looking at the experimental data, we had no idea about the values of these unknown parameters. The priors for <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> were set with the command <code>mu[i] ~ dnorm(0, 0.000001)</code>, which specifies the normal distribution using the mean of 0 and the precision of 0.000001, the precision being <span class="math inline">\(1/\sigma^2\)</span>. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.</p>
+<p>Finally, we have to define the priors for all the parameters. For both variance parameters, we selected a uniform distribution from 0 to 100 (<code>sigma.e ~ dunif(0, 100)</code>). For <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> our prior expectation was that they were normally distributed with a mean of 0 and a very high standard deviation (<span class="math inline">\(\sigma = 10^3\)</span>). So high an SD value used as a prior information means that, without looking at the experimental data, we had no idea about the values of these unknown parameters. The priors for <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> were set with the command <code>mu[i] ~ dnorm(0, 0.000001)</code>, which specifies the normal distribution using the mean of 0 and the precision of 0.000001, the precision being <span class="math inline">\(1/\sigma^2\)</span>. Such a parameterisation is used by JAGS and other MCMC samplers, such as WinBUGS.</p>
 <p>In the above model definition, we also added some derived quantities, to be calculated from the estimated parameters, such as the difference between <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span>.</p>
 <hr />
 </div>
@@ -427,232 +427,11 @@ mcmc &lt;- jags.model(&quot;censoredMixedModel.txt&quot;,
                    data = win.data, 
                    inits = init, 
                    n.chains = 4, 
-                   n.adapt = 100)</code></pre>
-<pre><code>## Compiling data graph
-##    Resolving undeclared variables
-##    Allocating nodes
-##    Initializing
-##    Reading data back into data table
-## Compiling model graph
-##    Resolving undeclared variables
-##    Allocating nodes
-## Graph information:
-##    Observed stochastic nodes: 2441
-##    Unobserved stochastic nodes: 28
-##    Total graph size: 13388
-## 
-## Initializing model
-## 
-## 
-  |                                                        
-  |                                                  |   0%
-  |                                                        
-  |+                                                 |   2%
-  |                                                        
-  |++                                                |   4%
-  |                                                        
-  |+++                                               |   6%
-  |                                                        
-  |++++                                              |   8%
-  |                                                        
-  |+++++                                             |  10%
-  |                                                        
-  |++++++                                            |  12%
-  |                                                        
-  |+++++++                                           |  14%
-  |                                                        
-  |++++++++                                          |  16%
-  |                                                        
-  |+++++++++                                         |  18%
-  |                                                        
-  |++++++++++                                        |  20%
-  |                                                        
-  |+++++++++++                                       |  22%
-  |                                                        
-  |++++++++++++                                      |  24%
-  |                                                        
-  |+++++++++++++                                     |  26%
-  |                                                        
-  |++++++++++++++                                    |  28%
-  |                                                        
-  |+++++++++++++++                                   |  30%
-  |                                                        
-  |++++++++++++++++                                  |  32%
-  |                                                        
-  |+++++++++++++++++                                 |  34%
-  |                                                        
-  |++++++++++++++++++                                |  36%
-  |                                                        
-  |+++++++++++++++++++                               |  38%
-  |                                                        
-  |++++++++++++++++++++                              |  40%
-  |                                                        
-  |+++++++++++++++++++++                             |  42%
-  |                                                        
-  |++++++++++++++++++++++                            |  44%
-  |                                                        
-  |+++++++++++++++++++++++                           |  46%
-  |                                                        
-  |++++++++++++++++++++++++                          |  48%
-  |                                                        
-  |+++++++++++++++++++++++++                         |  50%
-  |                                                        
-  |++++++++++++++++++++++++++                        |  52%
-  |                                                        
-  |+++++++++++++++++++++++++++                       |  54%
-  |                                                        
-  |++++++++++++++++++++++++++++                      |  56%
-  |                                                        
-  |+++++++++++++++++++++++++++++                     |  58%
-  |                                                        
-  |++++++++++++++++++++++++++++++                    |  60%
-  |                                                        
-  |+++++++++++++++++++++++++++++++                   |  62%
-  |                                                        
-  |++++++++++++++++++++++++++++++++                  |  64%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++                 |  66%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++                |  68%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++               |  70%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++              |  72%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++             |  74%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++            |  76%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++           |  78%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++          |  80%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++++         |  82%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++++        |  84%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++++++       |  86%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++++++      |  88%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++++++++     |  90%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++++++++    |  92%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++++++++++   |  94%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++++++++++  |  96%
-  |                                                        
-  |+++++++++++++++++++++++++++++++++++++++++++++++++ |  98%
-  |                                                        
-  |++++++++++++++++++++++++++++++++++++++++++++++++++| 100%</code></pre>
-<pre class="r"><code>params &lt;- c(&quot;mu&quot;, &quot;sigma.e&quot;, &quot;sigma.P&quot;, 
+                   n.adapt = 100)
+params &lt;- c(&quot;mu&quot;, &quot;sigma.e&quot;, &quot;sigma.P&quot;, 
             &quot;sigma2p&quot;, &quot;sigma2e&quot;, &quot;diff&quot;)
-res3 &lt;- coda.samples(mcmc, params, n.iter = 10000)</code></pre>
-<pre><code>## 
-  |                                                        
-  |                                                  |   0%
-  |                                                        
-  |*                                                 |   2%
-  |                                                        
-  |**                                                |   4%
-  |                                                        
-  |***                                               |   6%
-  |                                                        
-  |****                                              |   8%
-  |                                                        
-  |*****                                             |  10%
-  |                                                        
-  |******                                            |  12%
-  |                                                        
-  |*******                                           |  14%
-  |                                                        
-  |********                                          |  16%
-  |                                                        
-  |*********                                         |  18%
-  |                                                        
-  |**********                                        |  20%
-  |                                                        
-  |***********                                       |  22%
-  |                                                        
-  |************                                      |  24%
-  |                                                        
-  |*************                                     |  26%
-  |                                                        
-  |**************                                    |  28%
-  |                                                        
-  |***************                                   |  30%
-  |                                                        
-  |****************                                  |  32%
-  |                                                        
-  |*****************                                 |  34%
-  |                                                        
-  |******************                                |  36%
-  |                                                        
-  |*******************                               |  38%
-  |                                                        
-  |********************                              |  40%
-  |                                                        
-  |*********************                             |  42%
-  |                                                        
-  |**********************                            |  44%
-  |                                                        
-  |***********************                           |  46%
-  |                                                        
-  |************************                          |  48%
-  |                                                        
-  |*************************                         |  50%
-  |                                                        
-  |**************************                        |  52%
-  |                                                        
-  |***************************                       |  54%
-  |                                                        
-  |****************************                      |  56%
-  |                                                        
-  |*****************************                     |  58%
-  |                                                        
-  |******************************                    |  60%
-  |                                                        
-  |*******************************                   |  62%
-  |                                                        
-  |********************************                  |  64%
-  |                                                        
-  |*********************************                 |  66%
-  |                                                        
-  |**********************************                |  68%
-  |                                                        
-  |***********************************               |  70%
-  |                                                        
-  |************************************              |  72%
-  |                                                        
-  |*************************************             |  74%
-  |                                                        
-  |**************************************            |  76%
-  |                                                        
-  |***************************************           |  78%
-  |                                                        
-  |****************************************          |  80%
-  |                                                        
-  |*****************************************         |  82%
-  |                                                        
-  |******************************************        |  84%
-  |                                                        
-  |*******************************************       |  86%
-  |                                                        
-  |********************************************      |  88%
-  |                                                        
-  |*********************************************     |  90%
-  |                                                        
-  |**********************************************    |  92%
-  |                                                        
-  |***********************************************   |  94%
-  |                                                        
-  |************************************************  |  96%
-  |                                                        
-  |************************************************* |  98%
-  |                                                        
-  |**************************************************| 100%</code></pre>
-<pre class="r"><code>burn.in &lt;- 1000</code></pre>
+res3 &lt;- coda.samples(mcmc, params, n.iter = 10000)
+burn.in &lt;- 1000</code></pre>
 <pre class="r"><code>summary(window(res3, start = burn.in))</code></pre>
 <pre><code>## 
 ## Iterations = 1000:10100
@@ -664,24 +443,24 @@ res3 &lt;- coda.samples(mcmc, params, n.iter = 10000)</code></pre>
 ##    plus standard error of the mean:
 ## 
 ##            Mean     SD  Naive SE Time-series SE
-## diff    -1.4714 0.4392 0.0023019      0.0061106
-## mu[1]    7.2296 0.3167 0.0016600      0.0042082
-## mu[2]    8.7010 0.3059 0.0016034      0.0044877
-## sigma.P  0.7715 0.2538 0.0013301      0.0063199
-## sigma.e  6.6046 0.1371 0.0007185      0.0009375
-## sigma2e 43.6395 1.8131 0.0095025      0.0124105
-## sigma2p  0.6596 0.4173 0.0021873      0.0083689
+## diff    -1.4814 0.4484 0.0023501      0.0060938
+## mu[1]    7.2203 0.3235 0.0016956      0.0042667
+## mu[2]    8.7017 0.3084 0.0016165      0.0042950
+## sigma.P  0.7860 0.2524 0.0013227      0.0054957
+## sigma.e  6.6043 0.1356 0.0007107      0.0009457
+## sigma2e 43.6350 1.7936 0.0094004      0.0125238
+## sigma2p  0.6815 0.4376 0.0022935      0.0086400
 ## 
 ## 2. Quantiles for each variable:
 ## 
-##             2.5%     25%     50%     75%   97.5%
-## diff    -2.35633 -1.7544 -1.4661 -1.1781 -0.6276
-## mu[1]    6.58879  7.0257  7.2360  7.4388  7.8399
-## mu[2]    8.10428  8.4986  8.6999  8.8998  9.3142
-## sigma.P  0.29500  0.6020  0.7638  0.9284  1.3010
-## sigma.e  6.34270  6.5114  6.6011  6.6957  6.8798
-## sigma2e 40.22986 42.3977 43.5752 44.8320 47.3322
-## sigma2p  0.08702  0.3624  0.5833  0.8620  1.6925</code></pre>
+##            2.5%    25%     50%     75%   97.5%
+## diff    -2.3854 -1.770 -1.4786 -1.1832 -0.6152
+## mu[1]    6.5624  7.011  7.2256  7.4345  7.8402
+## mu[2]    8.0905  8.500  8.7026  8.8986  9.3224
+## sigma.P  0.3304  0.614  0.7714  0.9378  1.3344
+## sigma.e  6.3466  6.512  6.6013  6.6935  6.8791
+## sigma2e 40.2799 42.406 43.5777 44.8034 47.3224
+## sigma2p  0.1091  0.377  0.5951  0.8794  1.7807</code></pre>
 <p>We can see that the the expected difference between the producers is equal to -1.477, and that there is a 95% posterior probability that the true difference is between -2.3763 and -0.6164 - so it is different from 0. (Do note, however, that other runs of the model may bring slightly different results). The random effect for the photos has a variance component of 0.66, and its credible interval does not contain 0.</p>
 <hr />
 </div>

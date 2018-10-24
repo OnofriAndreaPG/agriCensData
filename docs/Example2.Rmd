@@ -1,14 +1,18 @@
 ---
-title: 'Example 2. Analyzing time-to-event data'
-author: "A. Onofri, H-P. Piepho and Marcin Kozak"
-bibliography: GroupedData.bib
+title: "Example 2. Analyzing time-to-event data"
+author: "A. Onofri, H-P. Piepho and M. Kozak"
 csl: weed-research.csl
-output: 
+output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
-    toc_float: 
-     collapsed: false
-     smooth_scroll: false
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  word_document:
+    toc: yes
+bibliography: GroupedData.bib
 ---
 
 
