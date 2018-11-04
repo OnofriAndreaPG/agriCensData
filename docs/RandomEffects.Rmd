@@ -3,6 +3,8 @@ title: "Example 3 continued. Fitting a mixed effect survival model"
 author: "A. Onofri, H-P. Piepho and M. Kozak"
 csl: weed-research.csl
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float:

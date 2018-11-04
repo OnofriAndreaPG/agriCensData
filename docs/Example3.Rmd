@@ -3,6 +3,8 @@ title: "Example 3. Potato starch grains assessed in size categories"
 author: "Andrea Onofri, Hans-Peter Piepho and Marcin Kozak"
 csl: weed-research.csl
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float:
