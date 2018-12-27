@@ -121,7 +121,7 @@ summary(surv.reg1)
 
 We now see that the producer P1 had starch grains with an average diameter of 7.34 $\mu m$, and that the difference between P1 and P2 was 1.33 $\mu m$, which was significantly different from 0 (*P* = 3.3e-06).
 
-We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected. We discuss these aspects of the analysis in our paper (Annals of Applied biology, in press.; [doi.org/10.1111/aab.12477](https://doi.org/10.1111/aab.12477) ). 
+We argue that the results of this survival model fit are much clearer than those of the multinomial fit, and that, with this second fit, we have better respected the way the data were collected. We discuss these aspects of the analysis in our paper [@onofri2019_Analysingcensoreddata] (see: [doi.org/10.1111/aab.12477](https://doi.org/10.1111/aab.12477) ). 
 
 Do note, however, that our survival model is still not fully OK, because it disregards the point 3 above: we are still neglecting that starch grains are clustered within photos, which means that they are not independent. We will show how to deal with this aspect in the next webpage.
 

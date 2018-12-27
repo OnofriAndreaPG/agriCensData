@@ -325,7 +325,7 @@ Department of Botany, Warsaw University of Life Sciences - SGGW, Nowoursynowska 
 <hr />
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>We have recently written a paper titled “Analyzing interval-censored data in agricultural research: a review with examples and code snippets” (Annals of Applied biology, in press.; <a href="https://doi.org/10.1111/aab.12477">doi.org/10.1111/aab.12477</a> ). In that paper we noted that <em>survival analysis</em> has mostly been overlooked in agricultural research. This is not because censored data are not found in agriculture. Indeed, a survey of literature in agronomy and related disciplines shows several examples where individual traits cannot be measured with high precision. Their values need to be represented by uncertainty intervals into which the real values fall. Therefore, these measures are censored. Here are some examples we mention in the paper:</p>
+<p>We have recently written a paper titled “Analyzing interval-censored data in agricultural research: a review with examples and code snippets” (Annals of Applied biology, 174, 3-13; <a href="https://doi.org/10.1111/aab.12477">doi.org/10.1111/aab.12477</a> ). In that paper we noted that <em>survival analysis</em> has mostly been overlooked in agricultural research. This is not because censored data are not found in agriculture. Indeed, a survey of literature in agronomy and related disciplines shows several examples where individual traits cannot be measured with high precision. Their values need to be represented by uncertainty intervals into which the real values fall. Therefore, these measures are censored. Here are some examples we mention in the paper:</p>
 <ol style="list-style-type: decimal">
 <li>time-to-event data (flowering times, germination times)</li>
 <li>measurements taken with instruments with low resolution or an upper/lower limit of detection</li>
@@ -334,14 +334,22 @@ Department of Botany, Warsaw University of Life Sciences - SGGW, Nowoursynowska 
 </ol>
 <p>Unfortunately, when dealing with these data, agricultural researchers usually do not choose appropriate methods of data analysis, but they keep on using conventional tools, such as ANOVA and regression, which are either wrong or inefficient.</p>
 <p>In the paper we give three examples and try to show why it is important to use methods that fully respect the manner in which the data were collected. We also give some software tips to show the real life of analysing censored data, hoping that it will make censored data methods slightly more popular among biologists and agricultural scientists. However, the reviewers suggested we needed some extra space to take the readers hand-by-hand and guide them through the process of data analysis with censored data. Thankful for this suggestion, we offer this tour.</p>
-<p>This webpage aims to provide the commented R code and the datasets to reproduce all the analyses and results described in the main paper (Annals of Applied biology, in press.; <a href="https://doi.org/10.1111/aab.12477">doi.org/10.1111/aab.12477</a> ). We also give some extra hints, to open up other possibilities, not considered in the paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively.</p>
+<p>This webpage aims to provide the commented R code and the datasets to reproduce all the analyses and results described in the main paper <span class="citation">(Onofri et al. 2019)</span>. We also give some extra hints, to open up other possibilities, not considered in the paper. Our hope is that, whenever censored data are recognised, the correct techniques are used more extensively.</p>
 </div>
 <div id="the-package" class="section level1">
 <h1>The package</h1>
 <p>This web-site is associated to the R package <code>agriCensData</code>, which contains all the datasets. You can install it from gitHub. You also need to have installed the <em>devtools</em> package. The code is as follows:</p>
 <pre class="r"><code># install.packages(&quot;devtools&quot;)
-library(devtools)
-install_github(&quot;OnofriAndreaPG/agriCensData&quot;)</code></pre>
+#library(devtools)
+#install_github(&quot;OnofriAndreaPG/agriCensData&quot;)</code></pre>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-onofri2019_Analysingcensoreddata">
+<p><span style="font-variant: small-caps;">Onofri, A, H-P Piepho, M Kozak</span> (2019) Analysing censored data in agricultural research: A review with examples and software tips. <em>Annals of Applied Biology</em> <strong>174</strong>, 3–13</p>
+</div>
+</div>
 </div>
 
 
