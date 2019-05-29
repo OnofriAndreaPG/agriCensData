@@ -90,7 +90,7 @@ countsC <- with(
   ) 
 
 Germination2 <- data.frame(
-  temp = rep(factor(rep(c(15, 20), each = 21)), countsC),
+  temp = rep(factor(rep(c(15, 25), each = 21)), countsC),
   timeBef = rep(c(NA, Germination$obsT[1:20], NA, 
                   Germination$obsT[21:40]), countsC),
   timeAf = rep(c(Germination$obsT[1:20], NA, 
@@ -131,7 +131,7 @@ countsC <- with(Germination,
                 )
 
 Germination3 <- data.frame(
-  temp = factor(rep(c(15, 20), each = 21)),
+  temp = factor(rep(c(15, 25), each = 21)),
   timeBef = c(0, Germination$obsT[1:20], 
               0, Germination$obsT[21:40]),
   timeAf = c(Germination$obsT[1:20], Inf, 
